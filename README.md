@@ -1,0 +1,53 @@
+# Open Video Translator
+
+A tool box that can be used to translate videos from one language to another. 
+It will be all local, no need to upload the video to any server. 
+
+## Installation
+
+I am assuming you have a NVIDIA GPU and you have installed the NVIDIA drivers. 
+
+Clone this repository. I am using docker that I don't need to worry about all the environment issues. Build the docker image by running the following command:
+
+```bash
+docker compose up
+```
+
+This will setup the environment and install all the dependencies.
+
+In addition, make sure you have Ollama installed on your host machine. If not, please visit [Download Ollama](https://ollama.com/download). You could also install it in the docker container, but I found it makes more sense to have it installed on the host machine as you probably want to use it for other projects as well. 
+
+After you have installed Ollama, you need to download the model. Use the following command to download the model:
+
+```bash
+ollama pull <model-name>
+```
+
+For a list of available models, please visit [Ollama Models](https://ollama.com/models).
+
+## Usage 
+
+Please refer to the notebook [example.ipynb](example.ipynb) for an example on how to use the tool box.
+
+
+## Additional help 
+
+- If you docker does not detect you have a NVIDIA GPU, you can refer to my blog post [here](https://minhao-zhang.github.io/2024-11-15-docker-as-vm/).
+
+
+- If you wish to use the AI summarization feature, you might need a long context LLM. All Ollama models defaults to 2k context length. If you have the model you wish to use downloaded, you can create a new model by creating a file called `modelfile` with 
+
+    ```text 
+    FROM <model-name>
+    PARAMETER num_ctx <context-length>
+    ```
+
+    You can pick any model you wish to use and set the context length to any value you wish. The default is 2048, so you probably want to set it to a larger value. A good rule of thumb is that normal speech is about 140 words per minute, 4 tokens for 3 words. So for a 10 minute video, a 1k context is needed. In addition, there will be some overhead from the system prompt so you always want to be on the safe side. 
+
+    After you have created the `modelfile`, you can create a new model by running the following command:
+
+    ```bash
+    ollama create your-long-context-model-name -f modelfile
+    ```
+
+    You now have your own model with a larger context length.

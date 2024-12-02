@@ -1,0 +1,14 @@
+services:
+  video-translation:
+    build: .
+    container_name: video-translation
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,video
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/video-translation
+    network_mode: "host"
+    command: [ "jupyter", "lab", "--ip=0.0.0.0", "--no-browser", "--allow-root" ]
