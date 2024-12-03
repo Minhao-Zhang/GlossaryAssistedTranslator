@@ -1,7 +1,10 @@
 # Open Video Translator
 
-A tool box that can be used to translate videos from one language to another. 
-It will be all local, no need to upload the video to any server. 
+A tool box that can be used to download and translate almost any video to any language.
+It will be all **local**, no need to upload the video to any server. 
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp) is used to download the video ([supported sites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)). 
+- [openai-whisper](https://github.com/openai/whisper) is used to transcribe the video ([supported language](https://github.com/openai/whisper/blob/main/whisper/tokenizer.py)). 
+- [ollama](https://github.com/ollama/ollama-python) is used to translate the video. Supported language can vary from the model you chose. 
 
 ## Installation
 
@@ -32,17 +35,17 @@ Please refer to the notebook [example.ipynb](example.ipynb) for an example on ho
 
 ## Additional help 
 
-- If you docker does not detect you have a NVIDIA GPU, you can refer to my blog post [here](https://minhao-zhang.github.io/2024-11-15-docker-as-vm/).
+- If you docker does not detect you have a NVIDIA GPU, you can refer to my blog post [here](https://minhao-zhang.github.io/2024-11-07-docker-as-vm/) on setting up docker for deep learning on Windows.
 
 
-- If you wish to use the AI summarization feature, you might need a long context LLM. All Ollama models defaults to 2k context length. If you have the model you wish to use downloaded, you can create a new model by creating a file called `modelfile` with 
+- If you wish to use the AI summarization feature, you might need a long context LLM. All Ollama models defaults to 2k context length. You can create a new model by creating a file called `modelfile` with 
 
     ```text 
     FROM <model-name>
     PARAMETER num_ctx <context-length>
     ```
 
-    You can pick any model you wish to use and set the context length to any value you wish. The default is 2048, so you probably want to set it to a larger value. A good rule of thumb is that normal speech is about 140 words per minute, 4 tokens for 3 words. So for a 10 minute video, a 1k context is needed. In addition, there will be some overhead from the system prompt so you always want to be on the safe side. 
+    You can pick any model you wish to use and set the context length to any value you wish. The default is 2048, so you probably want to set it to a larger value. A good rule of thumb is that normal speech is about 140 words per minute, 4 tokens for 3 words. So for a 10 minute video, a 2k context is needed. In addition, there will be some overhead from the system prompt so you always want to be on the safe side. 
 
     After you have created the `modelfile`, you can create a new model by running the following command:
 

@@ -7,29 +7,6 @@ import yt_dlp
 from ollama import Client
 
 
-def download_audio(url: str, output_dir: str = 'cache') -> str:
-    """Download audio from a YouTube video or other source.
-
-    Args:
-        url (str): The URL of the video.
-        output_dir (str, optional): Output directory. Defaults to 'cache'.
-
-    Returns:
-        str: The path to the downloaded audio file.
-    """
-
-    # check the output_dir exists
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    ydl_opts = {'format': "bestaudio",
-                'outtmpl': f'{output_dir}/%(id)s.%(ext)s'}
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url)
-
-    return f'{output_dir}/{info["id"]}.{info["ext"]}'
-
-
 def download_video(url: str, output_dir: str = 'cache') -> str:
     """Download video from a YouTube video or other source.
 
@@ -46,7 +23,7 @@ def download_video(url: str, output_dir: str = 'cache') -> str:
         os.makedirs(output_dir)
 
     ydl_opts = {'format': "bestvideo+bestaudio",
-                'cookiefile': 'ytb_cookies.txt',
+                # 'cookiefile': 'ytb_cookies.txt',
                 'outtmpl': f'{output_dir}/%(id)s.%(ext)s'}
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url)
@@ -54,12 +31,12 @@ def download_video(url: str, output_dir: str = 'cache') -> str:
     return f'{output_dir}/{info["id"]}.{info["ext"]}'
 
 
-def transcribe_audio(filename: str, whisper_model: str = "medium.en", language='en') -> dict:
+def transcribe_audio(filename: str, whisper_model: str = "medium", language='en') -> dict:
     """Transcribe audio from a file.
 
     Args:
         filename (str): The path to the audio file.
-        whisper_model (str, optional): OpenAI Whisper Model. Defaults to "medium.en". See more on https://github.com/openai/whisper.
+        whisper_model (str, optional): OpenAI Whisper Model. Defaults to "medium". See more on https://github.com/openai/whisper.
         language (str, optional): The language of the audio. Defaults to 'en'.
     Returns:
         dict: The transcription result.
@@ -68,7 +45,7 @@ def transcribe_audio(filename: str, whisper_model: str = "medium.en", language='
     # Load the model, use GPU if available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = whisper.load_model(
-        whisper_model, device=device)  # could also try turbo
+        whisper_model, device=device)
 
     result = model.transcribe(
         filename,
@@ -103,7 +80,7 @@ def extract_transcription(transcription: dict) -> tuple[list, list, list]:
 
 # A simple rule of thumb for the model size is
 # 140 words per minute in normal English speech and 4 tokens for 3 words
-# So for a 10-minute video, you would need a model with more than 1k context length
+# So for a 10-minute video, you will need a context length about 2k.
 # There's definitely a lot of variance in this, but it's a good starting point
 # You also need to add in overhead like system prompts and user messages
 # Since Ollama defaults to 2k context for all models, you probably need a larger model
@@ -152,7 +129,7 @@ def translate_transcription(original: list[str], system_prompt: str, model: str 
     Translate a list of original_language sentences to another language by setting LLM prompt.
 
     Args:
-        english (list[str]): A list of sentences.
+        original (list[str]): A list of sentences to be translated.
         system_prompt (str): The system prompt to use for translation.
         model (str, optional): The Ollama model to use for translation. Defaults to "qwen2.5:7b".
 
