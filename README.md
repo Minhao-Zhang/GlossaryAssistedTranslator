@@ -3,8 +3,8 @@
 A tool box that can be used to download and translate almost any video to any language.
 It will be all **local**, no need to upload the video to any server. 
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) is used to download the video ([supported sites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)). 
-- [openai-whisper](https://github.com/openai/whisper) is used to transcribe the video ([supported language](https://github.com/openai/whisper/blob/main/whisper/tokenizer.py)). 
-- [ollama](https://github.com/ollama/ollama-python) is used to translate the video. Supported language can vary from the model you chose. 
+- [openai-whisper](https://github.com/openai/whisper) is used to transcribe the video ([supported languages](https://github.com/openai/whisper/blob/main/whisper/tokenizer.py)). 
+- [ollama](https://github.com/ollama/ollama-python) is used to translate the video. Supported languages can vary from the model you chose. You shall refer to the respective model page for the supported languages. 
 
 ## Installation
 
