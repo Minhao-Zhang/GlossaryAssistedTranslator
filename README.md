@@ -1,7 +1,9 @@
 # Open Video Translator
 
-A tool box that can be used to download and translate almost any video to any language.
-It will be all **local**, no need to upload the video to any server. 
+A tool box that can be used to download and translate almost any video to any language. 
+It will be all **local** and **open-source**. 
+With LLMs supporting long context, translation of each line of subtitle will be context aware. 
+
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) is used to download the video ([supported sites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)). 
 - [openai-whisper](https://github.com/openai/whisper) is used to transcribe the video ([supported languages](https://github.com/openai/whisper/blob/main/whisper/tokenizer.py)). 
 - [ollama](https://github.com/ollama/ollama-python) is used to translate the video. Supported languages can vary from the model you chose. You shall refer to the respective model page for the supported languages. 
@@ -31,6 +33,15 @@ For a list of available models, please visit [Ollama Models](https://ollama.com/
 ## Usage 
 
 Please refer to the notebook [example.ipynb](example.ipynb) for an example on how to use the tool box.
+
+## Things you could customize 
+
+- Use different OpenAI Whisper models. 
+- Use different LLMs that can be run through Ollama. 
+- Change the system prompt for translation. 
+  - Provide a glossary for more accurate translation.
+  - Tune the tone of voice for the translation. 
+  - change the context length of the LLM.
 
 
 ## Additional help 

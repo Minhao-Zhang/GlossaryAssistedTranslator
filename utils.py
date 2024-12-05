@@ -1,3 +1,4 @@
+from collections import deque
 import os
 import datetime
 from tqdm import tqdm
@@ -124,7 +125,7 @@ def summarize_transcription(transcription: dict, model: str = "8k-qwen2.5:7b") -
     return response['message']['content'].strip()
 
 
-def translate_transcription(original: list[str], system_prompt: str, model: str = "qwen2.5:7b") -> list[str]:
+def translate_subtitle(original: list[str], system_prompt: str, model: str = "qwen2.5:7b", subtitle_history_length: int = 10) -> list[str]:
     """
     Translate a list of original_language sentences to another language by setting LLM prompt.
 
@@ -140,28 +141,40 @@ def translate_transcription(original: list[str], system_prompt: str, model: str 
     # necessary for docker to communicate with host
     client = Client(host='http://host.docker.internal:11434')
 
-    # A sample system prompt for translation could be
-
-    # Translate the following English text to {language}.
-    # The text is part of a {video_context} video script.
-    # Ensure the translation feels natural and culturally localized, avoiding direct English phrasing where possible.
-    # Maintain a tone that is light, friendly, and suitable for the context, but not overly cheerful.
-    # Keep the translation concise.
-    # Only reply with the translation text, nothing else.
-
     translated = []
-    for line in tqdm(original):
-        response = client.chat(model=model, messages=[
+    history = deque(maxlen=subtitle_history_length*2)
+
+    for i in tqdm(range(len(original))):
+
+        # prepare the history
+        messages = [
             {
                 'role': 'system',
                 'content': system_prompt,
             },
-            {
-                'role': 'user',
-                'content': line,
-            },
-        ])
+        ]
+        messages.extend(list(history))
+        messages.append({
+            'role': 'user',
+            'content': original[i],
+        })
+
+        # chat with the model
+        response = client.chat(model=model, messages=messages)
         translated.append(response['message']['content'].strip())
+
+        # update the history
+        history.append({
+            'role': 'user',
+            'content': original[i],
+        })
+        history.append({
+            'role': 'assistant',
+            'content': translated[-1],
+        })
+
+        # print(f"Original   : {original[i]}")
+        # print(f"Translation: {translated[-1]}")
 
     unload_model(model)
     return translated
