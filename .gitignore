@@ -3,7 +3,7 @@
 *.wav
 cache/*
 ytb_cookies.txt
-test.ipynb
+valorant/*
 
 
 # Byte-compiled / optimized / DLL files

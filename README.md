@@ -11,8 +11,22 @@ With LLMs supporting long context, translation of each line of subtitle will be 
 ## Installation
 
 I am assuming you have a NVIDIA GPU and you have installed the NVIDIA drivers. 
+I am running on Ubunbu under Windows Subsystem Linux, so my set up might be a bit different. 
 
-Clone this repository. I am using docker that I don't need to worry about all the environment issues. Build the docker image by running the following command:
+```bash
+sudo apt update -y 
+sudo apt upgrade -y 
+sudo apt insall ffmpeg
+
+conda create -n video-translation python=3.12.4
+conda activate video-translation
+conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
+pip install faster_whisper
+conda install cudnn # you might need this for faster_whisper
+conda isntall transformers 
+```
+
+<!-- Clone this repository. I am using docker that I don't need to worry about all the environment issues. Build the docker image by running the following command:
 
 ```bash
 docker compose up
@@ -64,4 +78,4 @@ Please refer to the notebook [example.ipynb](example.ipynb) for an example on ho
     ollama create your-long-context-model-name -f modelfile
     ```
 
-    You now have your own model with a larger context length.
+    You now have your own model with a larger context length. -->
