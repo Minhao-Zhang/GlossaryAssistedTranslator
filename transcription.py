@@ -1,5 +1,28 @@
 from faster_whisper import WhisperModel
 import datetime
+import os
+import pandas as pd
+
+
+def get_whisper_prompt(dir: str) -> str:
+    """Get the whisper prompt from a directory of CSV files.
+    Each csv file should have a column named 'English' with the terms to be included in the prompt.
+
+    Args:
+        dir (str): The directory containing CSV files.
+
+    Returns:
+        str: comma-separated list of terms.
+    """
+
+    whisper_prompt = "Glossary: "
+    for file in os.listdir(dir):
+        if file.endswith(".csv"):
+            df = pd.read_csv(os.path.join(dir, file))
+            for _, row in df.iterrows():
+                whisper_prompt += row['English'] + ", "
+
+    return whisper_prompt
 
 
 def transcribe(file_name: str, model_size: str = "large-v3", whisper_prompt: str = "") -> tuple[list[datetime.timedelta], list[datetime.timedelta], list[float]]:

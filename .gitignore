@@ -1,9 +1,7 @@
-*.m4a
-*.mp3
-*.wav
 cache/*
 ytb_cookies.txt
 valorant/*
+cp_to_host.sh
 
 
 # Byte-compiled / optimized / DLL files

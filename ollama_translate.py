@@ -1,4 +1,7 @@
 from collections import deque
+import json
+import os
+import pandas as pd
 from tqdm import tqdm
 import ollama
 
@@ -50,7 +53,7 @@ def summarize_transcription(transcription: dict, model: str = "8k-qwen2.5:7b") -
     return response['message']['content'].strip()
 
 
-def translate_subtitle(original: list[str], system_prompt: str, model: str = "qwen2.5:7b", subtitle_history_length: int = 10) -> list[str]:
+def translate_subtitle(original: list[str], system_prompt: str, model: str = "qwen2.5:7b", subtitle_history_length: int = 5, all_glossary: str = "") -> list[str]:
     """
     Translate a list of original_language sentences to another language by setting LLM prompt.
 
@@ -58,6 +61,8 @@ def translate_subtitle(original: list[str], system_prompt: str, model: str = "qw
         original (list[str]): A list of sentences to be translated.
         system_prompt (str): The system prompt to use for translation.
         model (str, optional): The Ollama model to use for translation. Defaults to "qwen2.5:7b".
+        subtitle_history_length (int, optional): The length of the history to maintain. Defaults to 5.
+        all_glossary (str): The glossary to use for translation.
 
     Returns:
         list[str]: A list of translations.
@@ -70,6 +75,46 @@ def translate_subtitle(original: list[str], system_prompt: str, model: str = "qw
     history = deque(maxlen=subtitle_history_length*2)
 
     for i in tqdm(range(len(original))):
+        messages = [
+            {
+                'role': 'system',
+                'content': f"""
+                You are an assisstant for an English-Mandarin professional interpreter.
+                You are tasked to find possible glossary terms in the conversation.
+
+                Provide the glossary terms in the following format:
+                Original: Translation, Original: Translation, ...
+                Here is the source glossary:
+                ---
+                {all_glossary}
+                ---
+                Only provide the glossary terms and their coresponding translation that are mentioned in the content.
+                If none of the source glossary terms are mentioned in the content, please respond "No glossary".
+                """,
+            },
+            {
+                'role': 'user',
+                'content': f"{original[i]}"
+            }
+        ]
+
+        response = ollama.chat(model=model, messages=messages)
+        concise_glossary = response['message']['content'].strip()
+
+        system_prompt = f"""
+        You are a multilingual subtitle translation assistant. Translate the following English subtitle into Simplified Chinese (Mandarin).
+        This is a Valorant analysis video, and you may encounter technical terms related to the game.
+        Refer to the following glossary for key terminology, but adapt as needed for any transcription errors or approximations:
+        Here is the glossary with format English: 中文
+        ---
+        {concise_glossary}
+        ---
+
+        Ensure the translation is natural and culturally localized, avoiding overly direct English phrasing.
+        Consider the preceding and following sentences to maintain contextual accuracy and flow.
+
+        Reply **only** with the translated text and nothing else.
+        """
 
         # prepare the history
         messages = [
@@ -98,9 +143,6 @@ def translate_subtitle(original: list[str], system_prompt: str, model: str = "qw
             'content': translated[-1],
         })
 
-        # print(f"Original   : {original[i]}")
-        # print(f"Translation: {translated[-1]}")
-
     unload_model(model)
     return translated
 
@@ -117,3 +159,44 @@ def unload_model(model: str):
     # client = Client(host='http://host.docker.internal:11434')
     response = ollama.generate(model=model, keep_alive=0)
     return response
+
+
+def get_glossary(dir: str) -> str:
+    """Get the glossary for LLM translation
+    Accepted formats are csv and json. 
+
+    Args:
+        dir (str): directory of the glossary files. 
+
+    Returns:
+        str: _description_
+    """
+
+    # get all csv files
+    csv_files = [f for f in os.listdir(dir) if f.endswith('.csv')]
+    json_files = [f for f in os.listdir(dir) if f.endswith('.json')]
+
+    glossary = ""
+
+    for file in csv_files:
+        df = pd.read_csv(os.path.join(dir, file))
+        for _, row in df.iterrows():
+            glossary += row['English'] + ": " + row['Chinese'] + ", "
+
+    # for file in json_files:
+    #     with open(os.path.join(dir, file), 'r') as f:
+    #         data = json.load(f)
+
+    #     for english_key, details in data.items():
+    #         # Ensure there is a "Chinese" key in the details
+    #         if "Chinese" in details:
+    #             # Add the top-level English-Chinese pair
+    #             glossary += english_key + ": " + details['Chinese'] + ", "
+
+    #         # Extract all other English-Chinese pairs within this section
+    #         for sub_key, sub_value in details.items():
+    #             # Skip the "Chinese" key itself
+    #             if sub_key != "Chinese":
+    #                 glossary += sub_key + ": " + sub_value + ", "
+
+    return glossary
