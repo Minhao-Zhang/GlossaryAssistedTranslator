@@ -15,7 +15,7 @@ def get_whisper_prompt(dir: str) -> str:
         str: comma-separated list of terms.
     """
 
-    whisper_prompt = "Glossary: "
+    whisper_prompt = ""
     for file in os.listdir(dir):
         if file.endswith(".csv"):
             df = pd.read_csv(os.path.join(dir, file))
