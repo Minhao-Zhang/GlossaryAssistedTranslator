@@ -1,80 +1,116 @@
-import chromadb
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_chroma import Chroma
+from langchain.schema import Document
 import pandas as pd
-import ollama
 
 
-class RAG():
-    def __init__(self, chroma_client: chromadb.Client, collection_name: str, ollama_embed_model: str):
-        self.chroma_client = chroma_client
-        self.collection = chroma_client.get_or_create_collection(
-            name=collection_name)
-        self.ollama_embed_model = ollama_embed_model
+class RAG:
+    def __init__(self, collection_name: str, embedding_model_name: str):
+        self.collection_name = collection_name
+        self.embedding_model_name = embedding_model_name
+
+        model_kwargs = {
+            "trust_remote_code": True
+        }
+        encode_kwargs = {
+        }
+
+        self.embedding_model = HuggingFaceEmbeddings(
+            model_name=embedding_model_name,
+            model_kwargs=model_kwargs,
+            encode_kwargs=encode_kwargs,
+        )
+
+        # Initialize Chroma vector store with the embedding function
+        self.vectorstore = Chroma(
+            collection_name, embedding_function=self.embedding_model)
+
         self.doc_count = 0
 
-    def embed_ollama(self, text, task_type="docoment"):
-        if self.ollama_embed_model == 'nomic-embed-text':
-            if task_type == "docoment":
-                prefix = "search_document: "
-            elif task_type == "question":
-                prefix = "search_query: "
-            else:
-                prefix = ""
-            response = ollama.embeddings(
-                model=self.ollama_embed_model,
-                prompt=prefix + text
-            )
-        elif self.ollama_embed_model == 'snowflake-arctic-embed2':
-            response = ollama.embeddings(
-                model=self.ollama_embed_model,
-                prompt="Represent this sentence for searching relevant passages: " + text
-            )
-        else:
-            response = ollama.embeddings(
-                model=self.ollama_embed_model,
-                prompt=text
-            )
-        return response['embedding']
-
-    def query(self, text, n_results=3):
-        embed_text = self.embed_ollama(text, "question")
-        result = self.collection.query(embed_text, n_results=n_results)
-        return result['documents'][0]
-
-    def insert(self, text_to_encode, text_to_store):
-        embed = self.embed_ollama(text_to_encode, 'nomic-embed-text')
+    def insert(self, definition: str, example_translation: str):
+        # nomic uses `search_document: ` as a prefix to the definition
+        if self.embedding_model_name[:5] == "nomic":
+            definition = f"search_document: {definition}"
         self.doc_count += 1
-        self.collection.upsert(documents=text_to_store,
-                               ids="id_" + str(self.doc_count),
-                               embeddings=embed)
+        doc = Document(page_content=definition,
+                       metadata={
+                           "id": f"id_{self.doc_count}",
+                           "example_translation": example_translation
+                       })
+        self.vectorstore.add_documents([doc])
+
+    def insert_all(self, definition: list[str], example_translation: list[str]):
+        doc = []
+        for d, s in zip(definition, example_translation):
+            if self.embedding_model_name[:5] == "nomic":
+                definition = f"search_document: {d}"
+            self.doc_count += 1
+            doc.append(Document(page_content=d,
+                                metadata={
+                                    "id": f"id_{self.doc_count}",
+                                    "example_translation": s
+                                }))
+        self.vectorstore.add_documents(doc)
+
+    def query(self, question: str, n_results: int = 3):
+        """
+        Retrieve documents relevant to the question.
+        :param question: Query text.
+        :param n_results: Number of results to return.
+        :return: List of relevant documents.
+        """
+        retriever = self.vectorstore.as_retriever(
+            search_kwargs={"k": n_results})
+        docs = retriever.invoke(question)
+        return docs
 
 
 if __name__ == "__main__":
-    chroma_client = chromadb.Client()
-    rag1 = RAG(chroma_client, "rag1", "nomic-embed-text")
-    rag2 = RAG(chroma_client, "rag2", "snowflake-arctic-embed2")
+    # Initialize RAG instances with different Sentence Transformer models
+    # Example: A smaller, faster model
+    rag1 = RAG("rag1", "nomic-ai/nomic-embed-text-v1.5")
+    # Example: A high-performance model
+    rag2 = RAG("rag2", "dunzhang/stella_en_400M_v5")
 
-    general_terms = pd.read_csv('rag_db/general_terms.csv')
-    for i, row in general_terms.iterrows():
-        rag1.insert(row['Definition'], row['Definition'] +
-                    '\n' + row['Sample'])
-        rag2.insert(row['Definition'], row['Definition'] +
-                    '\n' + row['Sample'])
-    weapons = pd.read_csv('rag_db/weapons.csv')
-    for i, row in weapons.iterrows():
-        rag1.insert(row['Definition'], row['Definition'] +
-                    '\n' + row['Sample'])
-        rag2.insert(row['Definition'], row['Definition'] +
-                    '\n' + row['Sample'])
+    # Load data from CSVs and insert into vector store
+    general_terms = pd.read_csv("rag_db/general_terms.csv")
+    rag1.insert_all(list(general_terms["Definition"]), list(
+        general_terms["Example"]))
+    rag2.insert_all(list(general_terms["Definition"]), list(
+        general_terms["Example"]))
 
+    weapons = pd.read_csv("rag_db/weapons.csv")
+    rag1.insert_all(list(weapons["Definition"]), list(
+        weapons["Example"]))
+    rag2.insert_all(list(weapons["Definition"]), list(
+        weapons["Example"]))
+
+    players = pd.read_csv("rag_db/players.csv")
+    rag1.insert_all(list(players["Definition"]), list(
+        players["Example"]))
+    rag2.insert_all(list(players["Definition"]), list(
+        players["Example"]))
+
+    teams = pd.read_csv("rag_db/teams.csv")
+    rag1.insert_all(list(teams["Definition"]), list(
+        teams["Example"]))
+    rag2.insert_all(list(teams["Definition"]), list(
+        teams["Example"]))
+
+    # Interactive question-answering loop
     while True:
         print("=====================================================================")
         question = input("Enter a question: ")
-        if question == "exit":
+        if question.lower() == "exit":
             break
         print("---------------------------------------------------------------------")
 
+        print("RAG1 Results:")
         for doc in rag1.query(question):
-            print(doc)
-        print()
+            print(doc.page_content)
+            print(doc.metadata["example_translation"])
+
+        print("\nRAG2 Results:")
         for doc in rag2.query(question):
-            print(doc)
+            print(doc.page_content)
+            print(doc.metadata["example_translation"])
