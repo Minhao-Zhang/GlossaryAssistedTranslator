@@ -1,20 +1,28 @@
 # Open Video Translator
 
-A tool box that can be used to download and translate almost any video to any language. 
-It will be all **local** and **open-source**. 
-With LLMs supporting long context, translation of each line of subtitle will be context aware. 
-
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp) is used to download the video ([supported sites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)). 
-- [openai-whisper](https://github.com/openai/whisper) is used to transcribe the video ([supported languages](https://github.com/openai/whisper/blob/main/whisper/tokenizer.py)). 
-- [ollama](https://github.com/ollama/ollama-python) is used to translate the video. Supported languages can vary from the model you chose. You shall refer to the respective model page for the supported languages. 
+A tool box that can be used to translate videos. 
+- optimized for subtitle translation
+- no paid APIs, all you need is your laptop
+- low-resource translation with RAG-powered glossary generation
+- (potentially) automatic subtitle merging and breaking
 
 ## TODO 
-- Use Transformers package instead of ollama.
+- [x] Build a translation agent with glossary injection
+  - [x] Glossary collection
+  - [x] Glossary selection powered by LLM
+  - [x] Translation using selected glossary
+- [ ] Build a proper RAG system for glossary retrival
+  - [x] Use Langchain to build a RAG foundation class
+  - [ ] Collect some more glossary with better translation
+  - [ ] Build Few-Shot Prommpting using these translations
+  - [ ] Allow more embedding models to be used
+  - [ ] Experiment with different similarity function
+- [ ] Use Llama.cpp instead of Ollama to run inference models as it supports almost any models you can find on Huggingface
 
 ## Installation
 
 I am assuming you have a NVIDIA GPU and you have installed the NVIDIA drivers. 
-I am running on Ubunbu under Windows Subsystem Linux, so my set up might be a bit different. 
+I am running on Ubunbu under Windows Subsystem Linux. Your set up might be a bit different. 
 
 ```bash
 sudo apt update -y 
@@ -26,5 +34,6 @@ conda activate video-translation
 conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
 pip install faster_whisper
 conda install cudnn # you might need this for faster_whisper
-conda isntall transformers 
+pip install transformers
+pip install langchain langchain_community langchain_chroma # I certainly forgot some of them
 ```
