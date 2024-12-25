@@ -5,6 +5,8 @@ import pandas as pd
 from tqdm import tqdm
 import ollama
 
+from rag import RAG
+
 # A simple rule of thumb for the model size is
 # 140 words per minute in normal English speech and 4 tokens for 3 words
 # So for a 10-minute video, you will need a context length about 2k.
@@ -53,7 +55,7 @@ def summarize_transcription(transcription: dict, model: str = "8k-qwen2.5:7b") -
     return response['message']['content'].strip()
 
 
-def translate_subtitle(original: list[str], system_prompt: str, model: str = "qwen2.5:7b", subtitle_history_length: int = 5, all_glossary: str = "") -> list[str]:
+def translate_subtitle_v1(original: list[str], system_prompt: str, model: str = "qwen2.5:7b", subtitle_history_length: int = 5, all_glossary: str = "") -> list[str]:
     """
     Translate a list of original_language sentences to another language by setting LLM prompt.
 
@@ -137,6 +139,82 @@ def translate_subtitle(original: list[str], system_prompt: str, model: str = "qw
         history.append({
             'role': 'user',
             'content': original[i],
+        })
+        history.append({
+            'role': 'assistant',
+            'content': translated[-1],
+        })
+
+    unload_model(model)
+    return translated
+
+
+def translate_subtitle_v2(original: list[str], rag: RAG, model: str = "qwen2.5:7b", subtitle_history_length: int = 5) -> list[str]:
+    """
+    Translate a list of original_language sentences to another language by setting LLM prompt.
+
+    Args:
+        original (list[str]): A list of sentences to be translated.
+        system_prompt (str): The system prompt to use for translation.
+        model (str, optional): The Ollama model to use for translation. Defaults to "qwen2.5:7b".
+        subtitle_history_length (int, optional): The length of the history to maintain. Defaults to 5.
+        all_glossary (str): The glossary to use for translation.
+
+    Returns:
+        list[str]: A list of translations.
+    """
+
+    # necessary for docker to communicate with host
+    # client = Client(host='http://host.docker.internal:11434')
+
+    translated = []
+    history = deque(maxlen=subtitle_history_length*2)
+
+    for i in tqdm(range(len(original))):
+
+        docs = rag.query(original[i], n_results=5)
+        glossary = ""
+        for doc in docs:
+            glossary += "Definition: " + doc.page_content + \
+                "Sample Translation: " + \
+                doc.metadata["example_translation"] + "\n"
+
+        system_prompt = f"""
+        You are a multilingual subtitle translation assistant. Translate the following English subtitle into Simplified Chinese (Mandarin).
+        This is a Valorant analysis video, and you may encounter technical terms related to the game.
+        The word "heretics" should always be translated to "TH".
+        Refer to the following definition of technical terms and example translation:
+        ---
+        {glossary}
+        ---
+        Ensure the translation is natural and culturally localized, avoiding overly direct English phrasing.
+        Consider the preceding and following sentences to maintain contextual accuracy and flow.
+        The word "heretics" should always be translated to "TH".
+
+        Reply **only** with the translated text and nothing else.
+        """
+
+        # prepare the history
+        messages = [
+            {
+                'role': 'system',
+                'content': system_prompt,
+            },
+        ]
+        messages.extend(list(history))
+        messages.append({
+            'role': 'user',
+            'content': "Translate the following sentence while pay attention to the sentence before this: " + original[i],
+        })
+
+        # chat with the model
+        response = ollama.chat(model=model, messages=messages)
+        translated.append(response['message']['content'].strip())
+
+        # update the history
+        history.append({
+            'role': 'user',
+            'content': "Translate the following sentence while pay attention to the sentence before this: " + original[i],
         })
         history.append({
             'role': 'assistant',

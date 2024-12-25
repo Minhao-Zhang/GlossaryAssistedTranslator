@@ -10,7 +10,8 @@ class RAG:
         self.embedding_model_name = embedding_model_name
 
         model_kwargs = {
-            "trust_remote_code": True
+            "trust_remote_code": True,
+            'device': 'cpu'
         }
         encode_kwargs = {
         }
@@ -19,6 +20,7 @@ class RAG:
             model_name=embedding_model_name,
             model_kwargs=model_kwargs,
             encode_kwargs=encode_kwargs,
+
         )
 
         # Initialize Chroma vector store with the embedding function
@@ -66,11 +68,9 @@ class RAG:
 
 
 if __name__ == "__main__":
-    # Initialize RAG instances with different Sentence Transformer models
-    # Example: A smaller, faster model
     rag1 = RAG("rag1", "nomic-ai/nomic-embed-text-v1.5")
-    # Example: A high-performance model
     rag2 = RAG("rag2", "dunzhang/stella_en_400M_v5")
+    rag3 = RAG("rag3", "Snowflake/snowflake-arctic-embed-l-v2.0")
 
     # Load data from CSVs and insert into vector store
     general_terms = pd.read_csv("rag_db/general_terms.csv")
@@ -78,11 +78,15 @@ if __name__ == "__main__":
         general_terms["Example"]))
     rag2.insert_all(list(general_terms["Definition"]), list(
         general_terms["Example"]))
+    rag3.insert_all(list(general_terms["Definition"]), list(
+        general_terms["Example"]))
 
     weapons = pd.read_csv("rag_db/weapons.csv")
     rag1.insert_all(list(weapons["Definition"]), list(
         weapons["Example"]))
     rag2.insert_all(list(weapons["Definition"]), list(
+        weapons["Example"]))
+    rag3.insert_all(list(weapons["Definition"]), list(
         weapons["Example"]))
 
     players = pd.read_csv("rag_db/players.csv")
@@ -90,12 +94,24 @@ if __name__ == "__main__":
         players["Example"]))
     rag2.insert_all(list(players["Definition"]), list(
         players["Example"]))
+    rag3.insert_all(list(players["Definition"]), list(
+        players["Example"]))
 
     teams = pd.read_csv("rag_db/teams.csv")
     rag1.insert_all(list(teams["Definition"]), list(
         teams["Example"]))
     rag2.insert_all(list(teams["Definition"]), list(
         teams["Example"]))
+    rag3.insert_all(list(teams["Definition"]), list(
+        teams["Example"]))
+
+    agents = pd.read_csv("rag_db/agents.csv")
+    rag1.insert_all(list(agents["Definition"]), list(
+        agents["Example"]))
+    rag2.insert_all(list(agents["Definition"]), list(
+        agents["Example"]))
+    rag3.insert_all(list(agents["Definition"]), list(
+        agents["Example"]))
 
     # Interactive question-answering loop
     while True:
@@ -112,5 +128,10 @@ if __name__ == "__main__":
 
         print("\nRAG2 Results:")
         for doc in rag2.query(question):
+            print(doc.page_content)
+            print(doc.metadata["example_translation"])
+
+        print("\nRAG3 Results:")
+        for doc in rag3.query(question):
             print(doc.page_content)
             print(doc.metadata["example_translation"])
