@@ -11,7 +11,8 @@ class RAG:
 
         model_kwargs = {
             "trust_remote_code": True,
-            'device': 'cpu'
+            # my VRAM does not allow me to run a large embedding model and a long context inference model at the same time.
+            # 'device': 'cpu'
         }
         encode_kwargs = {
         }
@@ -20,7 +21,6 @@ class RAG:
             model_name=embedding_model_name,
             model_kwargs=model_kwargs,
             encode_kwargs=encode_kwargs,
-
         )
 
         # Initialize Chroma vector store with the embedding function
@@ -44,6 +44,7 @@ class RAG:
     def insert_all(self, definition: list[str], example_translation: list[str]):
         doc = []
         for d, s in zip(definition, example_translation):
+            d = "Definition of " + d
             if self.embedding_model_name[:5] == "nomic":
                 definition = f"search_document: {d}"
             self.doc_count += 1
@@ -55,12 +56,6 @@ class RAG:
         self.vectorstore.add_documents(doc)
 
     def query(self, question: str, n_results: int = 3):
-        """
-        Retrieve documents relevant to the question.
-        :param question: Query text.
-        :param n_results: Number of results to return.
-        :return: List of relevant documents.
-        """
         retriever = self.vectorstore.as_retriever(
             search_kwargs={"k": n_results})
         docs = retriever.invoke(question)

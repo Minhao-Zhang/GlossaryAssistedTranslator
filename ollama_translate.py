@@ -150,20 +150,6 @@ def translate_subtitle_v1(original: list[str], system_prompt: str, model: str = 
 
 
 def translate_subtitle_v2(original: list[str], rag: RAG, model: str = "qwen2.5:7b", subtitle_history_length: int = 5) -> list[str]:
-    """
-    Translate a list of original_language sentences to another language by setting LLM prompt.
-
-    Args:
-        original (list[str]): A list of sentences to be translated.
-        system_prompt (str): The system prompt to use for translation.
-        model (str, optional): The Ollama model to use for translation. Defaults to "qwen2.5:7b".
-        subtitle_history_length (int, optional): The length of the history to maintain. Defaults to 5.
-        all_glossary (str): The glossary to use for translation.
-
-    Returns:
-        list[str]: A list of translations.
-    """
-
     # necessary for docker to communicate with host
     # client = Client(host='http://host.docker.internal:11434')
 
@@ -172,24 +158,25 @@ def translate_subtitle_v2(original: list[str], rag: RAG, model: str = "qwen2.5:7
 
     for i in tqdm(range(len(original))):
 
-        docs = rag.query(original[i], n_results=5)
+        docs = rag.query(
+            "Find possible definition involved in words in the sentence below: " + original[i], n_results=5)
         glossary = ""
         for doc in docs:
             glossary += "Definition: " + doc.page_content + \
-                "Sample Translation: " + \
+                "\nSample Translation: " + \
                 doc.metadata["example_translation"] + "\n"
 
         system_prompt = f"""
         You are a multilingual subtitle translation assistant. Translate the following English subtitle into Simplified Chinese (Mandarin).
         This is a Valorant analysis video, and you may encounter technical terms related to the game.
-        The word "heretics" should always be translated to "TH".
+        The word "Vitality" should always be translated to "VIT" and "Trace" or "Trace Esports" should always be translated to "TE".
         Refer to the following definition of technical terms and example translation:
         ---
         {glossary}
         ---
         Ensure the translation is natural and culturally localized, avoiding overly direct English phrasing.
         Consider the preceding and following sentences to maintain contextual accuracy and flow.
-        The word "heretics" should always be translated to "TH".
+        The word "Vitality" should always be translated to "VIT" and "Trace" or "Trace Esports" should always be translated to "TE".
 
         Reply **only** with the translated text and nothing else.
         """
@@ -226,30 +213,12 @@ def translate_subtitle_v2(original: list[str], rag: RAG, model: str = "qwen2.5:7
 
 
 def unload_model(model: str):
-    """Unload Ollama model.
-
-    Args:
-        model (str): The Ollama model to unload.
-
-    Returns:
-        any: The response from the Ollama API.
-    """
     # client = Client(host='http://host.docker.internal:11434')
     response = ollama.generate(model=model, keep_alive=0)
     return response
 
 
 def get_glossary(dir: str) -> str:
-    """Get the glossary for LLM translation
-    Accepted formats are csv and json. 
-
-    Args:
-        dir (str): directory of the glossary files. 
-
-    Returns:
-        str: _description_
-    """
-
     # get all csv files
     csv_files = [f for f in os.listdir(dir) if f.endswith('.csv')]
     json_files = [f for f in os.listdir(dir) if f.endswith('.json')]
