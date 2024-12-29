@@ -7,52 +7,68 @@ import ollama
 
 from rag import RAG
 
-# A simple rule of thumb for the model size is
-# 140 words per minute in normal English speech and 4 tokens for 3 words
-# So for a 10-minute video, you will need a context length about 2k.
-# There's definitely a lot of variance in this, but it's a good starting point
-# You also need to add in overhead like system prompts and user messages
-# Since Ollama defaults to 2k context for all models, you probably need a larger model
-# You can use the provided model file to set the context length to 4k or 8k
 
-
-def summarize_transcription(transcription: dict, model: str = "8k-qwen2.5:7b") -> str:
-    """Summarize the transcription into a concise format using LLM.
-
-    Args:
-        transcription (dict): The transcription result from whisper.
-        model (str, optional): The Ollama model to use for summarization. Defaults to "8k-qwen2.5:7b".
-
-    Returns:
-        str: The summarized transcription.
-    """
-
+def translate_subtitle_v2(original: list[str], rag: RAG, model: str = "qwen2.5:7b", subtitle_history_length: int = 5) -> list[str]:
     # necessary for docker to communicate with host
     # client = Client(host='http://host.docker.internal:11434')
 
-    system_prompt = """
-    Summarize the following text into a concise and coherent paragraph.
-    The text is a transcription of a video.
-    Ensure the summary captures the main points of the video.
-    Keep the summary to a maximum of 50 words.
-    Only reply with the summary text, nothing else.
-    Here is the transcription:
-    """
+    translated = []
+    history = deque(maxlen=subtitle_history_length*2)
 
-    response = ollama.chat(model=model, messages=[
-        {
-            'role': 'system',
-            'content': system_prompt,
-        },
-        {
+    for i in tqdm(range(len(original))):
+
+        docs = rag.query(
+            "Find possible definition involved in words in the sentence below: " + original[i], n_results=5)
+        glossary = ""
+        for doc in docs:
+            glossary += "Definition: " + doc.page_content + \
+                "\nSample Translation: " + \
+                doc.metadata["example_translation"] + "\n"
+
+        system_prompt = f"""
+        You are a multilingual subtitle translation assistant. Translate the following English subtitle into Simplified Chinese (Mandarin).
+        This is a Valorant analysis video, and you may encounter technical terms related to the game.
+        The word "Vitality" should always be translated to "VIT" and "Trace" or "Trace Esports" should always be translated to "TE".
+        Refer to the following definition of technical terms and example translation:
+        ---
+        {glossary}
+        ---
+        Ensure the translation is natural and culturally localized, avoiding overly direct English phrasing.
+        Consider the preceding and following sentences to maintain contextual accuracy and flow.
+        The word "Vitality" should always be translated to "VIT" and "Trace" or "Trace Esports" should always be translated to "TE".
+
+        Reply **only** with the translated text and nothing else.
+        """
+
+        # prepare the history
+        messages = [
+            {
+                'role': 'system',
+                'content': system_prompt,
+            },
+        ]
+        messages.extend(list(history))
+        messages.append({
             'role': 'user',
-            'content': transcription['text'],
-        },
-    ])
+            'content': "Translate the following sentence while pay attention to the sentence before this: " + original[i],
+        })
+
+        # chat with the model
+        response = ollama.chat(model=model, messages=messages)
+        translated.append(response['message']['content'].strip())
+
+        # update the history
+        history.append({
+            'role': 'user',
+            'content': "Translate the following sentence while pay attention to the sentence before this: " + original[i],
+        })
+        history.append({
+            'role': 'assistant',
+            'content': translated[-1],
+        })
 
     unload_model(model)
-
-    return response['message']['content'].strip()
+    return translated
 
 
 def translate_subtitle_v1(original: list[str], system_prompt: str, model: str = "qwen2.5:7b", subtitle_history_length: int = 5, all_glossary: str = "") -> list[str]:
@@ -149,69 +165,6 @@ def translate_subtitle_v1(original: list[str], system_prompt: str, model: str = 
     return translated
 
 
-def translate_subtitle_v2(original: list[str], rag: RAG, model: str = "qwen2.5:7b", subtitle_history_length: int = 5) -> list[str]:
-    # necessary for docker to communicate with host
-    # client = Client(host='http://host.docker.internal:11434')
-
-    translated = []
-    history = deque(maxlen=subtitle_history_length*2)
-
-    for i in tqdm(range(len(original))):
-
-        docs = rag.query(
-            "Find possible definition involved in words in the sentence below: " + original[i], n_results=5)
-        glossary = ""
-        for doc in docs:
-            glossary += "Definition: " + doc.page_content + \
-                "\nSample Translation: " + \
-                doc.metadata["example_translation"] + "\n"
-
-        system_prompt = f"""
-        You are a multilingual subtitle translation assistant. Translate the following English subtitle into Simplified Chinese (Mandarin).
-        This is a Valorant analysis video, and you may encounter technical terms related to the game.
-        The word "Vitality" should always be translated to "VIT" and "Trace" or "Trace Esports" should always be translated to "TE".
-        Refer to the following definition of technical terms and example translation:
-        ---
-        {glossary}
-        ---
-        Ensure the translation is natural and culturally localized, avoiding overly direct English phrasing.
-        Consider the preceding and following sentences to maintain contextual accuracy and flow.
-        The word "Vitality" should always be translated to "VIT" and "Trace" or "Trace Esports" should always be translated to "TE".
-
-        Reply **only** with the translated text and nothing else.
-        """
-
-        # prepare the history
-        messages = [
-            {
-                'role': 'system',
-                'content': system_prompt,
-            },
-        ]
-        messages.extend(list(history))
-        messages.append({
-            'role': 'user',
-            'content': "Translate the following sentence while pay attention to the sentence before this: " + original[i],
-        })
-
-        # chat with the model
-        response = ollama.chat(model=model, messages=messages)
-        translated.append(response['message']['content'].strip())
-
-        # update the history
-        history.append({
-            'role': 'user',
-            'content': "Translate the following sentence while pay attention to the sentence before this: " + original[i],
-        })
-        history.append({
-            'role': 'assistant',
-            'content': translated[-1],
-        })
-
-    unload_model(model)
-    return translated
-
-
 def unload_model(model: str):
     # client = Client(host='http://host.docker.internal:11434')
     response = ollama.generate(model=model, keep_alive=0)
@@ -247,3 +200,50 @@ def get_glossary(dir: str) -> str:
     #                 glossary += sub_key + ": " + sub_value + ", "
 
     return glossary
+
+# A simple rule of thumb for the model size is
+# 140 words per minute in normal English speech and 4 tokens for 3 words
+# So for a 10-minute video, you will need a context length about 2k.
+# There's definitely a lot of variance in this, but it's a good starting point
+# You also need to add in overhead like system prompts and user messages
+# Since Ollama defaults to 2k context for all models, you probably need a larger model
+# You can use the provided model file to set the context length to 4k or 8k
+
+
+def summarize_transcription(transcription: dict, model: str = "8k-qwen2.5:7b") -> str:
+    """Summarize the transcription into a concise format using LLM.
+
+    Args:
+        transcription (dict): The transcription result from whisper.
+        model (str, optional): The Ollama model to use for summarization. Defaults to "8k-qwen2.5:7b".
+
+    Returns:
+        str: The summarized transcription.
+    """
+
+    # necessary for docker to communicate with host
+    # client = Client(host='http://host.docker.internal:11434')
+
+    system_prompt = """
+    Summarize the following text into a concise and coherent paragraph.
+    The text is a transcription of a video.
+    Ensure the summary captures the main points of the video.
+    Keep the summary to a maximum of 50 words.
+    Only reply with the summary text, nothing else.
+    Here is the transcription:
+    """
+
+    response = ollama.chat(model=model, messages=[
+        {
+            'role': 'system',
+            'content': system_prompt,
+        },
+        {
+            'role': 'user',
+            'content': transcription['text'],
+        },
+    ])
+
+    unload_model(model)
+
+    return response['message']['content'].strip()
