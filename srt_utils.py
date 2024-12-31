@@ -35,16 +35,20 @@ def load_srt(file_name: str) -> tuple[list, list, list]:
     with open(file_name, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
-    # Parse the SRT lines
-    for i in range(0, len(lines), 4):
+    i = 0
+    while i < len(lines):
         try:
+            # Skip empty lines
+            if lines[i].strip() == '':
+                i += 1
+                continue
+
+            # Read subtitle index (e.g., "1", "2", ...)
+            subtitle_index = int(lines[i].strip())
+            i += 1
+
             # Extract start and end times
-            start_time, end_time = lines[i + 1].strip().split(' --> ')
-
-            # Extract text
-            text.append(lines[i + 2].strip())
-
-            # Convert times to timedelta
+            start_time, end_time = lines[i].strip().split(' --> ')
             start_dt = datetime.datetime.strptime(start_time, '%H:%M:%S,%f')
             end_dt = datetime.datetime.strptime(end_time, '%H:%M:%S,%f')
 
@@ -52,8 +56,18 @@ def load_srt(file_name: str) -> tuple[list, list, list]:
                 hours=start_dt.hour, minutes=start_dt.minute, seconds=start_dt.second, milliseconds=start_dt.microsecond // 1000))
             end.append(datetime.timedelta(
                 hours=end_dt.hour, minutes=end_dt.minute, seconds=end_dt.second, milliseconds=end_dt.microsecond // 1000))
+            i += 1
+
+            # Extract subtitle text (handle multi-line text)
+            subtitle_text = []
+            while i < len(lines) and lines[i].strip() != '':
+                subtitle_text.append(lines[i].strip())
+                i += 1
+            text.append('\n'.join(subtitle_text))
+
         except (IndexError, ValueError) as e:
             print(f"Error processing SRT block starting at line {i + 1}: {e}")
+            i += 1
 
     return start, end, text
 
