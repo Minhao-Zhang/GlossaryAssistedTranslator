@@ -7,17 +7,21 @@ A tool box that can be used to translate videos.
 - (potentially) automatic subtitle merging and breaking
 
 ## TODO 
-- [x] Build a translation agent with glossary injection
+- [x] Build a translation agent with glossary support
   - [x] Glossary collection
   - [x] Glossary selection powered by LLM
   - [x] Translation using selected glossary
-- [ ] Build a proper RAG system for glossary retrival
+- [ ] Build a proper glossary retrival system
   - [x] Use Langchain to build a RAG foundation class
-  - [ ] Collect some more glossary with better translation
-  - [ ] Build Few-Shot Prompting using these translations
   - [x] Allow more embedding models to be used
-  - [ ] Experiment with different similarity function
+  - [ ] Fine tune embedding prompt and retrieval prompt
+  - [x] Build a basic nltk-based glossary retrival system
+  - [ ] Collect some more glossary with better translation
+  - [ ] Improve Zero-Shot or Few-Shot Prompting using these translations
+  - [ ] Experiment with different similarity function for RAG
+  - [ ] Align RAG glossary with NLTK based glossary
 - [ ] Use Llama.cpp instead of Ollama to run inference models as it supports almost any models you can find on Huggingface
+- [ ] Add support for using different APIs
 
 ## Installation
 

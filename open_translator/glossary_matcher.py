@@ -84,17 +84,17 @@ class GlossaryMatcher:
         return results.drop_duplicates()
 
     @classmethod
-    def from_rag_db(cls, rag_db_path: str = "rag_db"):
+    def from_dir(cls, dir_path: str = "rag_db"):
         """
-        Load and combine all glossary CSV files from the RAG database folder.
+        Load and combine all glossary CSV files from the specified directory.
 
         Args:
-            rag_db_path: Path to the directory containing glossary CSV files
+            dir_path: Path to the directory containing glossary CSV files
 
         Returns:
             New GlossaryMatcher instance initialized with combined glossary data
         """
-        all_files = glob.glob(os.path.join(rag_db_path, "*.csv"))
+        all_files = glob.glob(os.path.join(dir_path, "*.csv"))
         dfs = []
 
         for file in all_files:

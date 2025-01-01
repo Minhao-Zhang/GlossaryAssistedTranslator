@@ -11,6 +11,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain.schema import Document
 import pandas as pd
+import os
 
 
 class GlossaryRAG:
@@ -175,14 +176,9 @@ if __name__ == "__main__":
             GlossaryRAG("rag3", "Snowflake/snowflake-arctic-embed-l-v2.0")
         ]
 
-        # Load data from CSVs
-        csv_files = [
-            "data/general.csv",
-            "data/weapons.csv",
-            "data/players.csv",
-            "data/teams.csv",
-            "data/agents.csv"
-        ]
+        data_folder = "data"
+        csv_files = [os.path.join(data_folder, file) for file in os.listdir(
+            data_folder) if file.endswith(".csv")]
 
         for csv_file in csv_files:
             load_and_insert_data(glossary_rag_instances, csv_file)

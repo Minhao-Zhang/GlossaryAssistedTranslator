@@ -1,3 +1,12 @@
+"""
+SRT Utilities Module
+
+This module provides utility functions for handling SRT (SubRip Subtitle) files.
+It includes functions to save subtitles in SRT format, load subtitles from an SRT file,
+and save bilingual subtitles in SRT format. The functions support precise timing and
+optional adjustments for DaVinci Resolve timelines.
+"""
+
 import datetime
 
 
@@ -70,6 +79,7 @@ def load_srt(file_name: str) -> tuple[list, list, list]:
             start_dt = datetime.datetime.strptime(start_time, '%H:%M:%S,%f')
             end_dt = datetime.datetime.strptime(end_time, '%H:%M:%S,%f')
 
+            # Convert datetime to timedelta
             start.append(datetime.timedelta(
                 hours=start_dt.hour, minutes=start_dt.minute, seconds=start_dt.second, milliseconds=start_dt.microsecond // 1000))
             end.append(datetime.timedelta(

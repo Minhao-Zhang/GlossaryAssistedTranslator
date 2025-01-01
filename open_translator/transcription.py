@@ -54,6 +54,7 @@ def transcribe_whisper(
 
     Performs word-level transcription with automatic sentence segmentation.
     Optimized for CUDA devices with limited VRAM (< 8GB).
+    See which models to use at https://github.com/SYSTRAN/faster-whisper and https://huggingface.co/Systran.
 
     Args:
         file_name: Path to the audio/video file.
@@ -68,7 +69,7 @@ def transcribe_whisper(
     """
 
     model = WhisperModel(model_size, device="cuda", compute_type="float16")
-    segments, info = model.transcribe(
+    segments, _ = model.transcribe(
         file_name, beam_size=5, initial_prompt=whisper_prompt, word_timestamps=True)
 
     words = []
