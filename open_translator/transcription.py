@@ -1,21 +1,37 @@
-from openai import OpenAI
-from datetime import timedelta
-from pydub import AudioSegment
-from faster_whisper import WhisperModel
-import datetime
+"""
+Audio transcription module supporting multiple transcription backends.
+
+This module provides functionality for transcribing audio files using either
+Faster-Whisper or OpenAI's Whisper API. It includes support for handling large files
+through chunking and various transcription options.
+"""
+
+# Standard library imports
 import os
+import datetime
+from datetime import timedelta
+
+# Third-party imports
 import pandas as pd
+from pydub import AudioSegment
+from openai import OpenAI
+from faster_whisper import WhisperModel
+from typing import List, Tuple
 
 
 def get_whisper_prompt(dir: str) -> str:
-    """Get the whisper prompt from a directory of CSV files.
-    Each csv file should have a column named 'English' with the terms to be included in the prompt.
+    """
+    Build a whisper prompt from CSV files containing special terms.
+
+    Scans a directory for CSV files containing specialized vocabulary or terms
+    that should be included in the transcription prompt. Each CSV must have an
+    'English' column.
 
     Args:
-        dir (str): The directory containing CSV files.
+        dir: Directory path containing CSV files with vocabulary terms.
 
     Returns:
-        str: comma-separated list of terms.
+        A comma-separated string of terms to use as a prompt.
     """
 
     whisper_prompt = ""
@@ -28,16 +44,27 @@ def get_whisper_prompt(dir: str) -> str:
     return whisper_prompt
 
 
-def transcribe_whisper(file_name: str, model_size: str = "large-v3", whisper_prompt: str = "You are hosting a video. Please start.") -> tuple[list[datetime.timedelta], list[datetime.timedelta], list[float]]:
-    """Use Faster-Whisper to transcribe a video file. The default values will run with less than 8GB of VRAM.
+def transcribe_whisper(
+    file_name: str,
+    model_size: str = "large-v3",
+    whisper_prompt: str = "You are hosting a video. Please start."
+) -> Tuple[List[timedelta], List[timedelta], List[str]]:
+    """
+    Transcribe audio using Faster-Whisper model with GPU acceleration.
+
+    Performs word-level transcription with automatic sentence segmentation.
+    Optimized for CUDA devices with limited VRAM (< 8GB).
 
     Args:
-        file_name (str): The name of the video file.
-        model_size (str, optional): Model size. See available options on https://huggingface.co/Systran. Defaults to "large-v3".
-        whisper_prompt (str, optional): An initial prompt to guide the model transcription. Defaults to "".
+        file_name: Path to the audio/video file.
+        model_size: Whisper model size (tiny, base, small, medium, large-v1, large-v2, large-v3).
+        whisper_prompt: Initial prompt to guide the transcription context.
 
     Returns:
-        tuple[list, list, list]: start times, end times, and text of the transcription.
+        Tuple containing:
+        - List of sentence start times
+        - List of sentence end times
+        - List of transcribed text segments
     """
 
     model = WhisperModel(model_size, device="cuda", compute_type="float16")
@@ -77,7 +104,29 @@ def transcribe_openai(
     api_key_env_var: str = "OPENAI_API_KEY",
     chunk_duration: int = 30000,
     timestamp_granularity: str = "segment"
-) -> tuple[list[timedelta], list[timedelta], list[str]]:
+) -> Tuple[List[timedelta], List[timedelta], List[str]]:
+    """
+    Transcribe audio using OpenAI's Whisper API with automatic chunking.
+
+    Handles large files by splitting them into smaller chunks before transcription.
+    Supports various timestamp granularities for precise timing information.
+
+    Args:
+        file_name: Path to the audio/video file.
+        model: OpenAI Whisper model identifier.
+        api_key_env_var: Environment variable name containing the OpenAI API key.
+        chunk_duration: Duration of each audio chunk in milliseconds.
+        timestamp_granularity: Granularity of timestamp information ('word' or 'segment').
+
+    Returns:
+        Tuple containing:
+        - List of segment start times
+        - List of segment end times
+        - List of transcribed text segments
+
+    Raises:
+        EnvironmentError: If the API key environment variable is not set.
+    """
 
     client = OpenAI(api_key=os.environ.get(api_key_env_var))
 

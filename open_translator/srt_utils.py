@@ -1,8 +1,17 @@
-
 import datetime
 
 
 def save_srt(file_name: str, start: list, end: list, text: list, davinci: bool = False) -> None:
+    """
+    Save subtitles in SRT format.
+
+    Args:
+        file_name (str): The name of the file to save the subtitles.
+        start (list): List of start times as datetime.timedelta objects.
+        end (list): List of end times as datetime.timedelta objects.
+        text (list): List of subtitle texts.
+        davinci (bool): Adjust times for DaVinci Resolve timeline if True.
+    """
     with open(file_name, 'w') as f:
         for i, (s, e, t) in enumerate(zip(start, end, text)):
             # Convert total seconds to integer and extract milliseconds
@@ -28,6 +37,15 @@ def save_srt(file_name: str, start: list, end: list, text: list, davinci: bool =
 
 
 def load_srt(file_name: str) -> tuple[list, list, list]:
+    """
+    Load subtitles from an SRT file.
+
+    Args:
+        file_name (str): The name of the SRT file to load.
+
+    Returns:
+        tuple: Three lists containing start times, end times, and texts.
+    """
     start = []
     end = []
     text = []
@@ -73,6 +91,17 @@ def load_srt(file_name: str) -> tuple[list, list, list]:
 
 
 def save_bilingual_srt(file_name: str, start: list, end: list, text: list, translation: list, davinci: bool = False) -> None:
+    """
+    Save bilingual subtitles in SRT format.
+
+    Args:
+        file_name (str): The name of the file to save the subtitles.
+        start (list): List of start times as datetime.timedelta objects.
+        end (list): List of end times as datetime.timedelta objects.
+        text (list): List of original subtitle texts.
+        translation (list): List of translated subtitle texts.
+        davinci (bool): Adjust times for DaVinci Resolve timeline if True.
+    """
     with open(file_name, 'w', encoding='utf-8') as f:
         for i, (s, e, t, tr) in enumerate(zip(start, end, text, translation)):
             # Convert total seconds to integer and extract milliseconds

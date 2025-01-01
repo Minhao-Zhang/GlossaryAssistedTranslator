@@ -1,3 +1,10 @@
+"""
+Glossary matching module for terminology management and lookup.
+
+This module provides functionality for managing and searching domain-specific terminology
+in a glossary, supporting both single-word and multi-word term lookups with stemming support.
+"""
+
 import pandas as pd
 from typing import List, Dict
 import os
@@ -5,9 +12,16 @@ import glob
 from nltk.stem import PorterStemmer
 
 
-class TermMatcher:
+class GlossaryMatcher:
+    """A class for managing and searching domain-specific glossary terms."""
+
     def __init__(self, data: List[Dict] = None):
-        """Initialize the term matcher."""
+        """
+        Initialize the glossary matcher.
+
+        Args:
+            data: List of dictionaries containing glossary entries with Term, Definition, and Example fields
+        """
         self.data = pd.DataFrame(data) if data else pd.DataFrame()
         self.stemmer = PorterStemmer()
         if not self.data.empty:
@@ -15,17 +29,41 @@ class TermMatcher:
                 self.stemmer.stem)
 
     def search(self, term: str) -> pd.DataFrame:
-        """Search for entries matching the stemmed version of the term."""
+        """
+        Search for glossary entries matching the stemmed version of the term.
+
+        Args:
+            term: Term to search for in the glossary
+
+        Returns:
+            DataFrame containing matching glossary entries
+        """
         stemmed_term = self.stemmer.stem(term)
         return self.data[self.data['StemmedTerm'] == stemmed_term]
 
     def to_csv(self, path: str):
-        """Save the term matcher database to a CSV file."""
+        """
+        Save the glossary database to a CSV file.
+
+        Args:
+            path: File path to save the glossary
+        """
         self.data.to_csv(path, index=False)
 
     def search_sentence(self, sentence: str) -> pd.DataFrame:
-        """Search a sentence by processing it into 1-word and 2-word segments."""
-        # Remove punctuation (except hyphens), convert to lowercase, and replace hyphens with spaces
+        """
+        Search a sentence for glossary terms by processing it into word segments.
+
+        Handles both single-word and two-word terms, with special handling for
+        hyphens and punctuation.
+
+        Args:
+            sentence: Input text to search for glossary terms
+
+        Returns:
+            DataFrame containing all matching glossary entries
+        """
+        # Clean and normalize the input text
         cleaned = sentence.lower()
         cleaned = ''.join(c if c.isalnum() or c ==
                           '-' else ' ' for c in cleaned)
@@ -34,7 +72,7 @@ class TermMatcher:
         # Split into words
         words = cleaned.split()
 
-        # Generate 1-word and 2-word segments
+        # Generate single-word and two-word segments
         segments = words.copy()
         for i in range(len(words) - 1):
             segments.append(f"{words[i]} {words[i+1]}")
@@ -47,15 +85,21 @@ class TermMatcher:
 
     @classmethod
     def from_rag_db(cls, rag_db_path: str = "rag_db"):
-        """Load and combine all CSV files from the rag_db folder."""
+        """
+        Load and combine all glossary CSV files from the RAG database folder.
+
+        Args:
+            rag_db_path: Path to the directory containing glossary CSV files
+
+        Returns:
+            New GlossaryMatcher instance initialized with combined glossary data
+        """
         all_files = glob.glob(os.path.join(rag_db_path, "*.csv"))
         dfs = []
 
         for file in all_files:
             df = pd.read_csv(file)
-            # Ensure we only keep the required columns
             df = df[["Term", "Definition", "Example"]]
-            # Preprocess Term column: lowercase and remove punctuation
             df["Term"] = df["Term"].str.lower().str.replace(
                 r'[^\w\s]', '', regex=True)
             dfs.append(df)
@@ -65,21 +109,21 @@ class TermMatcher:
 
 
 if __name__ == "__main__":
-    # Initialize the term matcher
-    matcher = TermMatcher.from_rag_db()
+    # Initialize the glossary matcher
+    matcher = GlossaryMatcher.from_rag_db()
 
-    print("Term Matcher Service initialized. Type 'exit' to quit.")
+    print("Glossary Matcher Service initialized. Type 'exit' to quit.")
 
     while True:
-        sentence = input("\nEnter a sentence to search: ")
+        sentence = input("\nEnter a sentence to search in glossary: ")
         if sentence.lower() == "exit":
             break
 
         results = matcher.search_sentence(sentence)
 
         if not results.empty:
-            print("\nMatching terms:")
+            print("\nMatching glossary terms:")
             for term in results["Term"].unique():
                 print(f"- {term}")
         else:
-            print("No matching terms found.")
+            print("No matching glossary terms found.")

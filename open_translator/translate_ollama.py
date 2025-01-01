@@ -1,70 +1,92 @@
 from collections import deque
-import json
 import os
 import pandas as pd
 from tqdm import tqdm
 import ollama
+from ollama import Client
 
-from rag import RAG
+from open_translator.glossary_rag import GlossaryRAG
 
 
-def translate_subtitle_v2(original: list[str], rag: RAG, model: str = "qwen2.5:7b", subtitle_history_length: int = 5) -> list[str]:
-    # necessary for docker to communicate with host
-    # client = Client(host='http://host.docker.internal:11434')
+def translate_subtitle_v2(
+    original: list[str],
+    rag: GlossaryRAG = None,
+    base_url: str = "http://localhost:11434",
+    # this is here only to make the arguments match the OpenAI version
+    api_key_env_var: str = "OLLAMA_API_KEY",
+    model: str = "qwen2.5:7b",
+    subtitle_history_length: int = 5
+) -> list[str]:
+    """Translate a list of subtitle lines using Ollama's API.
+
+    Args:
+        original (list[str]): List of original subtitle lines to translate
+        rag (RAG, optional): RAG instance for glossary lookup. Defaults to None.
+        base_url (str, optional): Base URL for Ollama API. Defaults to "http://localhost:11434".
+        api_key_env_var (str, optional): Environment variable name containing API key. Defaults to "OLLAMA_API_KEY".
+        model (str, optional): Ollama model to use. Defaults to "qwen2.5:7b".
+        subtitle_history_length (int, optional): Number of previous subtitle pairs to maintain as context. Defaults to 5.
+
+    Returns:
+        list[str]: List of translated subtitle lines
+    """
+
+    # Create Ollama client with the provided base_url
+    client = Client(host=base_url)
 
     translated = []
-    history = deque(maxlen=subtitle_history_length*2)
+    history = deque(maxlen=subtitle_history_length * 2)
+
+    with open("prompt_template/glossary_v2.txt", "r") as file:
+        system_prompt = file.read()
 
     for i in tqdm(range(len(original))):
+        if rag:
+            # Query glossary definitions
+            docs = rag.query(
+                "Find possible definition involved in words in the sentence below: " + original[i], n_results=5
+            )
+            glossary = ""
+            for doc in docs:
+                glossary += "Definition: " + doc.page_content + \
+                    "\nSample Translation: " + \
+                    doc.metadata["example_translation"] + "\n"
+            formmated_system_prompt = system_prompt.format(
+                glossary=glossary
+            )
+        else:
+            formmated_system_prompt = system_prompt
 
-        docs = rag.query(
-            "Find possible definition involved in words in the sentence below: " + original[i], n_results=5)
-        glossary = ""
-        for doc in docs:
-            glossary += "Definition: " + doc.page_content + \
-                "\nSample Translation: " + \
-                doc.metadata["example_translation"] + "\n"
-
-        system_prompt = f"""
-        You are a multilingual subtitle translation assistant. Translate the following English subtitle into Simplified Chinese (Mandarin).
-        This is a Valorant analysis video, and you may encounter technical terms related to the game.
-        The word "Vitality" should always be translated to "VIT" and "Trace" or "Trace Esports" should always be translated to "TE".
-        Refer to the following definition of technical terms and example translation:
-        ---
-        {glossary}
-        ---
-        Ensure the translation is natural and culturally localized, avoiding overly direct English phrasing.
-        Consider the preceding and following sentences to maintain contextual accuracy and flow.
-        The word "Vitality" should always be translated to "VIT" and "Trace" or "Trace Esports" should always be translated to "TE".
-
-        Reply **only** with the translated text and nothing else.
-        """
-
-        # prepare the history
+        # Prepare the messages for the API
         messages = [
             {
-                'role': 'system',
-                'content': system_prompt,
+                "role": "system",
+                "content": formmated_system_prompt,
             },
         ]
         messages.extend(list(history))
         messages.append({
-            'role': 'user',
-            'content': "Translate the following sentence while pay attention to the sentence before this: " + original[i],
+            "role": "user",
+            "content": original[i],
         })
 
-        # chat with the model
-        response = ollama.chat(model=model, messages=messages)
-        translated.append(response['message']['content'].strip())
+        # Call the Ollama Chat API using the client
+        response = client.chat(
+            model=model,
+            messages=messages
+        )
 
-        # update the history
+        translated_text = response['message']['content'].strip()
+        translated.append(translated_text)
+
+        # Update the history
         history.append({
-            'role': 'user',
-            'content': "Translate the following sentence while pay attention to the sentence before this: " + original[i],
+            "role": "user",
+            "content": original[i],
         })
         history.append({
-            'role': 'assistant',
-            'content': translated[-1],
+            "role": "assistant",
+            "content": translated_text,
         })
 
     unload_model(model)

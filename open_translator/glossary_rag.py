@@ -1,3 +1,10 @@
+"""
+Glossary Retrieval-Augmented Generation (RAG) system for document retrieval.
+
+This module provides functionality for managing and searching domain-specific terminology
+in a glossary using a Retrieval-Augmented Generation (RAG) system.
+"""
+
 import logging
 from typing import List, Optional
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -6,12 +13,12 @@ from langchain.schema import Document
 import pandas as pd
 
 
-class RAG:
-    """Retrieval-Augmented Generation (RAG) system for document retrieval."""
+class GlossaryRAG:
+    """Glossary Retrieval-Augmented Generation (RAG) system for document retrieval."""
 
     def __init__(self, collection_name: str, embedding_model_name: str):
         """
-        Initialize the RAG system.
+        Initialize the GlossaryRAG system.
 
         Args:
             collection_name: Name of the Chroma collection
@@ -35,10 +42,10 @@ class RAG:
                 collection_name,
                 embedding_function=self.embedding_model
             )
-            logging.info(f"Initialized RAG system with collection '{
+            logging.info(f"Initialized GlossaryRAG system with collection '{
                          collection_name}'")
         except Exception as e:
-            logging.error(f"Failed to initialize RAG system: {str(e)}")
+            logging.error(f"Failed to initialize GlossaryRAG system: {str(e)}")
             raise
 
     def insert(self, definition: str, example_translation: str) -> None:
@@ -118,12 +125,12 @@ class RAG:
             raise
 
 
-def load_and_insert_data(rag_instances: List[RAG], csv_path: str) -> None:
+def load_and_insert_data(glossary_rag_instances: List[GlossaryRAG], csv_path: str) -> None:
     """
-    Load data from CSV and insert into RAG instances.
+    Load data from CSV and insert into GlossaryRAG instances.
 
     Args:
-        rag_instances: List of RAG instances
+        glossary_rag_instances: List of GlossaryRAG instances
         csv_path: Path to CSV file
     """
     try:
@@ -131,8 +138,8 @@ def load_and_insert_data(rag_instances: List[RAG], csv_path: str) -> None:
         definitions = list(data["Definition"])
         examples = list(data["Example"])
 
-        for rag in rag_instances:
-            rag.insert_all(definitions, examples)
+        for glossary_rag in glossary_rag_instances:
+            glossary_rag.insert_all(definitions, examples)
 
         logging.info(f"Loaded data from {csv_path}")
     except Exception as e:
@@ -140,15 +147,15 @@ def load_and_insert_data(rag_instances: List[RAG], csv_path: str) -> None:
         raise
 
 
-def display_results(results: List[Document], rag_name: str) -> None:
+def display_results(results: List[Document], glossary_rag_name: str) -> None:
     """
     Display query results in a formatted way.
 
     Args:
         results: List of documents to display
-        rag_name: Name of the RAG instance
+        glossary_rag_name: Name of the GlossaryRAG instance
     """
-    print(f"\n{rag_name} Results:")
+    print(f"\n{glossary_rag_name} Results:")
     for doc in results:
         print(doc.page_content)
 
@@ -161,24 +168,24 @@ if __name__ == "__main__":
     )
 
     try:
-        # Initialize RAG instances
-        rag_instances = [
-            RAG("rag1", "nomic-ai/nomic-embed-text-v1.5"),
-            RAG("rag2", "dunzhang/stella_en_400M_v5"),
-            RAG("rag3", "Snowflake/snowflake-arctic-embed-l-v2.0")
+        # Initialize GlossaryRAG instances
+        glossary_rag_instances = [
+            GlossaryRAG("rag1", "nomic-ai/nomic-embed-text-v1.5"),
+            GlossaryRAG("rag2", "dunzhang/stella_en_400M_v5"),
+            GlossaryRAG("rag3", "Snowflake/snowflake-arctic-embed-l-v2.0")
         ]
 
         # Load data from CSVs
         csv_files = [
-            "rag_db/general.csv",
-            "rag_db/weapons.csv",
-            "rag_db/players.csv",
-            "rag_db/teams.csv",
-            "rag_db/agents.csv"
+            "data/general.csv",
+            "data/weapons.csv",
+            "data/players.csv",
+            "data/teams.csv",
+            "data/agents.csv"
         ]
 
         for csv_file in csv_files:
-            load_and_insert_data(rag_instances, csv_file)
+            load_and_insert_data(glossary_rag_instances, csv_file)
 
         # Interactive question-answering loop
         while True:
@@ -187,9 +194,9 @@ if __name__ == "__main__":
             if question.lower() == "exit":
                 break
 
-            for rag in rag_instances:
-                results = rag.query(question)
-                display_results(results, rag.collection_name)
+            for glossary_rag in glossary_rag_instances:
+                results = glossary_rag.query(question)
+                display_results(results, glossary_rag.collection_name)
 
     except Exception as e:
         logging.error(f"Application error: {str(e)}")

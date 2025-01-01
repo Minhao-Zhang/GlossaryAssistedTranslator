@@ -3,7 +3,7 @@ from openai import OpenAI
 from collections import deque
 from tqdm import tqdm
 
-from rag import RAG
+from open_translator.glossary_rag import GlossaryRAG
 
 # https://api.deepseek.com/v1/
 # DEEPSEEK_API_KEY
@@ -11,12 +11,25 @@ from rag import RAG
 
 def translate_subtitle_v2(
     original: list[str],
-    rag: RAG = None,
+    rag: GlossaryRAG = None,
     base_url: str = "https://api.openai.com/v1/",
     api_key_env_var: str = "OPENAI_API_KEY",
     model: str = "gpt-4o-mini",
     subtitle_history_length: int = 5
 ) -> list[str]:
+    """Translate a list of subtitle lines using OpenAI's API.
+
+    Args:
+        original (list[str]): List of original subtitle lines to translate
+        rag (RAG, optional): RAG instance for glossary lookup. Defaults to None.
+        base_url (str, optional): Base URL for OpenAI API. Defaults to "https://api.openai.com/v1/".
+        api_key_env_var (str, optional): Environment variable name containing API key. Defaults to "OPENAI_API_KEY".
+        model (str, optional): OpenAI model to use. Defaults to "gpt-4o-mini".
+        subtitle_history_length (int, optional): Number of previous subtitle pairs to maintain as context. Defaults to 5.
+
+    Returns:
+        list[str]: List of translated subtitle lines
+    """
 
     client = OpenAI(
         api_key=os.environ.get(api_key_env_var),

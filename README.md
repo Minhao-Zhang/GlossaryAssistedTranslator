@@ -15,7 +15,7 @@ A tool box that can be used to translate videos.
   - [x] Use Langchain to build a RAG foundation class
   - [ ] Collect some more glossary with better translation
   - [ ] Build Few-Shot Prompting using these translations
-  - [ ] Allow more embedding models to be used
+  - [x] Allow more embedding models to be used
   - [ ] Experiment with different similarity function
 - [ ] Use Llama.cpp instead of Ollama to run inference models as it supports almost any models you can find on Huggingface
 
