@@ -7,6 +7,7 @@ through chunking and various transcription options.
 """
 
 # Standard library imports
+import glob
 import os
 import datetime
 from datetime import timedelta
@@ -20,34 +21,18 @@ from typing import List, Tuple
 
 
 def get_whisper_prompt(dir: str) -> str:
-    """
-    Build a whisper prompt from CSV files containing special terms.
-
-    Scans a directory for CSV files containing specialized vocabulary or terms
-    that should be included in the transcription prompt. Each CSV must have an
-    'English' column.
-
-    Args:
-        dir: Directory path containing CSV files with vocabulary terms.
-
-    Returns:
-        A comma-separated string of terms to use as a prompt.
-    """
-
-    whisper_prompt = ""
-    for file in os.listdir(dir):
-        if file.endswith(".csv"):
-            df = pd.read_csv(os.path.join(dir, file))
-            for _, row in df.iterrows():
-                whisper_prompt += row['English'] + ", "
-
-    return whisper_prompt
+    all_files = glob.glob(os.path.join(dir, "*.csv"))
+    terms = []
+    for file in all_files:
+        data = pd.read_csv(file)
+        terms.extend(data["Term"])
+    return ", ".join(terms)
 
 
 def transcribe_whisper(
     file_name: str,
     model_size: str = "large-v3",
-    whisper_prompt: str = "You are hosting a video. Please start."
+    whisper_prompt: str = "You are hosting a video. Please start now."
 ) -> Tuple[List[timedelta], List[timedelta], List[str]]:
     """
     Transcribe audio using Faster-Whisper model with GPU acceleration.

@@ -78,7 +78,7 @@ class GlossaryRAG:
             logging.error(f"Failed to insert document: {str(e)}")
             raise
 
-    def load_from_dir(self, dir_path: str = "rag_db") -> None:
+    def load_from_dir(self, dir_path: str = "data") -> None:
         """
         Load glossary data from CSV files in a directory.
 
