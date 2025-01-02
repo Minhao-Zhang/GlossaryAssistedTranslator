@@ -19,7 +19,7 @@ class GlossaryRAG:
 
     def __init__(self, collection_name: str, embedding_model_name: str,
                  embedding_prefix: str = "Definition of ",
-                 query_prefix: str = "Find definitions that relates to the sentence: "):
+                 query_prefix: str = "Identify and retrieve definitions for the key terms related to the following sentence: "):
         """
         Initialize the GlossaryRAG system.
 
