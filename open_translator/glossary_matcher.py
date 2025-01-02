@@ -83,16 +83,12 @@ class GlossaryMatcher:
         # Return unique results
         return results.drop_duplicates()
 
-    @classmethod
-    def from_dir(cls, dir_path: str = "rag_db"):
+    def load_from_dir(self, dir_path: str = "data") -> None:
         """
-        Load and combine all glossary CSV files from the specified directory.
+        Load glossary data from CSV files in a directory.
 
         Args:
-            dir_path: Path to the directory containing glossary CSV files
-
-        Returns:
-            New GlossaryMatcher instance initialized with combined glossary data
+            dir_path: Path to directory containing glossary CSV files
         """
         all_files = glob.glob(os.path.join(dir_path, "*.csv"))
         dfs = []
@@ -105,12 +101,16 @@ class GlossaryMatcher:
             dfs.append(df)
 
         combined_df = pd.concat(dfs, ignore_index=True)
-        return cls(combined_df.to_dict("records"))
+        self.data = pd.DataFrame(combined_df.to_dict("records"))
+        if not self.data.empty:
+            self.data['StemmedTerm'] = self.data['Term'].apply(
+                self.stemmer.stem)
 
 
 if __name__ == "__main__":
     # Initialize the glossary matcher
-    matcher = GlossaryMatcher.from_rag_db()
+    matcher = GlossaryMatcher()
+    matcher.load_from_dir()
 
     print("Glossary Matcher Service initialized. Type 'exit' to quit.")
 

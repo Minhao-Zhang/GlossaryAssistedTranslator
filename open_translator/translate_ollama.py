@@ -42,17 +42,20 @@ def translate_subtitle_v2(
 
     for i in tqdm(range(len(original))):
         if rag:
-            # Query glossary definitions
-            docs = rag.query(
-                "Find possible definition involved in words in the sentence below: " + original[i], n_results=5
+            # Query glossary definitions and format results
+            glossary_df = rag.query(
+                original[i],
+                n_results=5
             )
+
             glossary = ""
-            for doc in docs:
-                glossary += "Definition: " + doc.page_content + \
-                    "\nSample Translation: " + \
-                    doc.metadata["example_translation"] + "\n"
+            for _, row in glossary_df.iterrows():
+                # glossary += f"Term: {row['Term']}\n"
+                glossary += f"Definition: {row['Definition']}\n"
+                glossary += f"Example: {row['Example']}\n\n"
+
             formmated_system_prompt = system_prompt.format(
-                glossary=glossary
+                glossary=glossary.strip()
             )
         else:
             formmated_system_prompt = system_prompt

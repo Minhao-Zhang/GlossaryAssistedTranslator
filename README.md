@@ -56,3 +56,7 @@ They have much better UI and is fully functional at the moment.
 - [video-subtitle-master](video-subtitle-master)
 
 However, my project aims to develop a low-resource translation system that can used to translated niche topics. 
+
+## Rant 
+
+DeepSeek API is so cheap. It is also way better than any of the local hosted models. I started to think that I should just use the API instead of Ollama.
