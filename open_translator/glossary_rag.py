@@ -17,7 +17,7 @@ import glob
 class GlossaryRAG:
     """Glossary Retrieval-Augmented Generation (RAG) system for document retrieval."""
 
-    def __init__(self, collection_name: str, embedding_model_name: str,
+    def __init__(self, collection_name: str, embedding_model_name: str, device: str = "cpu",
                  embedding_prefix: str = "Definition of ",
                  query_prefix: str = "Identify and retrieve definitions for the key terms related to the following sentence: "):
         """
@@ -35,7 +35,7 @@ class GlossaryRAG:
         self.query_prefix = query_prefix
 
         try:
-            model_kwargs = {"trust_remote_code": True}
+            model_kwargs = {"trust_remote_code": True, "device": device}
             encode_kwargs = {}
 
             self.embedding_model = HuggingFaceEmbeddings(

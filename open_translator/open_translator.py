@@ -164,6 +164,7 @@ class OpenTranslator:
             translated.append(translated_text)
 
             self.update_history(sentence, translated_text)
+        return translated
 
 
 class OllamaTranslator(OpenTranslator):

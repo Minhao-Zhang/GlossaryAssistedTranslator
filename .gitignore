@@ -1,9 +1,7 @@
 cache/*
 ytb_cookies.txt
-valorant/*
 data/*
 cp_to_host.sh
-
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
