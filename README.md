@@ -1,4 +1,4 @@
-# Open Video Translator
+# Glossary Assisted Translator
 
 A tool box that can be used to translate videos. 
 - optimized for subtitle translation

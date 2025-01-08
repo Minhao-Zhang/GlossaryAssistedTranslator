@@ -12,11 +12,11 @@ from tqdm import tqdm
 from ollama import Client
 from openai import OpenAI
 import pandas as pd
-from open_translator.glossary_matcher import GlossaryMatcher
-from open_translator.glossary_rag import GlossaryRAG
+from gat.glossary_matcher import GlossaryMatcher
+from gat.glossary_rag import GlossaryRAG
 
 
-class OpenTranslator:
+class BaseTranslator:
     """
     Base class for AI-powered translators.
 
@@ -167,7 +167,7 @@ class OpenTranslator:
         return translated
 
 
-class OllamaTranslator(OpenTranslator):
+class OllamaTranslator(BaseTranslator):
     """Translator implementation using the Ollama API."""
 
     def chat(self, messages: List[dict], base_url: str = "localhost:11434", api_key_env_var: str = "OLLAMA_API_KEY", model: str = "qwen2.5:7b") -> str:
@@ -195,7 +195,7 @@ class OllamaTranslator(OpenTranslator):
         return response['message']['content'].strip()
 
 
-class OpenAITranslator(OpenTranslator):
+class OpenAITranslator(BaseTranslator):
     """Translator implementation using the OpenAI API."""
 
     def chat(self, messages: List[dict], base_url: str = "https://api.openai.com/v1", api_key_env_var: str = "OPENAI_API_KEY", model: str = "gpt-4o-mini") -> str:
@@ -225,7 +225,7 @@ class OpenAITranslator(OpenTranslator):
         return response.choices[0].message.content.strip()
 
 
-class DeepSeekTranslator(OpenTranslator):
+class DeepSeekTranslator(BaseTranslator):
     """Translator implementation using the DeepSeek API."""
 
     def chat(self, messages: List[dict], base_url: str = "https://api.deepseek.com/v1", api_key_env_var: str = "DEEPSEEK_API_KEY", model: str = "deepseek-chat") -> str:
