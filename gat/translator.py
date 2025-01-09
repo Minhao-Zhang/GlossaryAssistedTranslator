@@ -18,7 +18,7 @@ from gat.glossary_rag import GlossaryRAG
 
 class BaseTranslator:
     """
-    Base class for AI-powered translators.
+    Base class for AI-powered translators. This should not be used directly.
 
     Provides common functionality for managing translation context, glossary
     integration, and message formatting.
@@ -253,3 +253,5 @@ class DeepSeekTranslator(BaseTranslator):
         )
 
         return response.choices[0].message.content.strip()
+
+# If you wish to use other providers or packages, you can just override the chat function. 

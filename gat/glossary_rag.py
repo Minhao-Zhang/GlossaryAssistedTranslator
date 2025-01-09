@@ -54,7 +54,7 @@ class GlossaryRAG:
             logging.error(f"Failed to initialize GlossaryRAG system: {str(e)}")
             raise
 
-    def insert(self, term: str, definition: str, example: str) -> None:
+    def insert(self, term: str, translation: str, definition: str, example: str) -> None:
         """
         Insert a single document into the vector store.
 
@@ -68,6 +68,7 @@ class GlossaryRAG:
                 page_content=f"{self.embedding_prefix}{definition}",
                 metadata={
                     "term": term,
+                    "translation": translation,
                     "definition": definition,
                     "example": example
                 }

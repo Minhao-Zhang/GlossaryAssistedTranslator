@@ -76,6 +76,9 @@ class GlossaryMatcher:
         segments = words.copy()
         for i in range(len(words) - 1):
             segments.append(f"{words[i]} {words[i+1]}")
+        
+        # Only check the unique ones 
+        segments = list(set(segments))
 
         # Search each segment and combine results
         results = pd.concat([self.search(segment) for segment in segments])
@@ -95,7 +98,7 @@ class GlossaryMatcher:
 
         for file in all_files:
             df = pd.read_csv(file)
-            df = df[["Term", "Definition", "Example"]]
+            df = df[["Term", "Translation", "Definition", "Example"]]
             df["Term"] = df["Term"].str.lower().str.replace(
                 r'[^\w\s]', '', regex=True)
             dfs.append(df)
