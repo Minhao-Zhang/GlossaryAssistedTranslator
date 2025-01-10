@@ -1,0 +1,8 @@
+Please refer to the following for definition of glossary. 
+{definitions}
+
+Please refer to the following for example translation. 
+{examples}
+
+Please translate the following sentence:
+{sentence}

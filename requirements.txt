@@ -2,3 +2,6 @@ faster_whisper
 yt-dlp
 ollama
 chromadb
+pandas
+nltk
+pydub
