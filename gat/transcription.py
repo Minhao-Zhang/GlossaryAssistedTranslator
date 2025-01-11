@@ -6,18 +6,16 @@ Faster-Whisper or OpenAI's Whisper API. It includes support for handling large f
 through chunking and various transcription options.
 """
 
-# Standard library imports
+import datetime
 import glob
 import os
-import datetime
 from datetime import timedelta
-
-# Third-party imports
-import pandas as pd
-from pydub import AudioSegment
-from openai import OpenAI
-from faster_whisper import WhisperModel
 from typing import List, Tuple
+
+import pandas as pd
+from faster_whisper import WhisperModel
+from openai import OpenAI
+from pydub import AudioSegment
 
 
 def get_whisper_prompt(dir: str) -> str:

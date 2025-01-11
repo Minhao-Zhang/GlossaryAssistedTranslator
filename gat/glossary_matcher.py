@@ -5,10 +5,11 @@ This module provides functionality for managing and searching domain-specific te
 in a glossary, supporting both single-word and multi-word term lookups with stemming support.
 """
 
-import pandas as pd
-from typing import List, Dict
-import os
 import glob
+import os
+from typing import Dict, List
+
+import pandas as pd
 from nltk.stem import PorterStemmer
 
 

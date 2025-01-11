@@ -5,13 +5,11 @@ AI translation services including Ollama, OpenAI, and DeepSeek.
 """
 
 from collections import deque
-import os
 from typing import List, Optional
+
+import pandas as pd
 from tqdm import tqdm
 
-from ollama import Client
-from openai import OpenAI
-import pandas as pd
 from gat.glossary_matcher import GlossaryMatcher
 
 
@@ -32,7 +30,6 @@ class BaseTranslator:
         Initialize the translator with optional glossary components.
 
         Args:
-            rag: GlossaryRAG instance for semantic glossary lookup
             matcher: GlossaryMatcher instance for exact match glossary lookup
             system_prompt_file: Path to file containing the system prompt template
         """
@@ -187,92 +184,3 @@ class BaseTranslator:
                 "content": translated_text,
             })
         return translated
-
-
-class OllamaTranslator(BaseTranslator):
-    """Translator implementation using the Ollama API."""
-
-    def chat(self, messages: List[dict], base_url: str = "localhost:11434", api_key_env_var: str = "OLLAMA_API_KEY", model: str = "qwen2.5:7b") -> str:
-        """
-        Send messages to the Ollama API for translation. 
-
-        If you are running this inside docker, the base_url shall be set to http://host.docker.internal:11434
-
-        Args:
-            messages: List of message dictionaries
-            base_url: Base URL for the Ollama API
-            api_key_env_var: Environment variable name containing API key
-            model: Ollama model to use for translation
-
-        Returns:
-            Translated text from Ollama
-        """
-        client = Client(host=base_url)
-
-        response = client.chat(
-            model=model,
-            messages=messages
-        )
-
-        return response['message']['content'].strip()
-
-
-class OpenAITranslator(BaseTranslator):
-    """Translator implementation using the OpenAI API."""
-
-    def chat(self, messages: List[dict], base_url: str = "https://api.openai.com/v1", api_key_env_var: str = "OPENAI_API_KEY", model: str = "gpt-4o-mini") -> str:
-        """
-        Send messages to the OpenAI API for translation.
-
-        Args:
-            messages: List of message dictionaries
-            base_url: Base URL for the OpenAI API
-            api_key_env_var: Environment variable name containing API key
-            model: OpenAI model to use for translation
-
-        Returns:
-            Translated text from OpenAI
-        """
-        client = OpenAI(
-            api_key=os.environ.get(api_key_env_var),
-            base_url=base_url
-        )
-
-        response = client.chat.completions.create(
-            messages=messages,
-            model=model,
-        )
-
-        return response.choices[0].message.content.strip()
-
-
-class DeepSeekTranslator(BaseTranslator):
-    """Translator implementation using the DeepSeek API."""
-
-    def chat(self, messages: List[dict], base_url: str = "https://api.deepseek.com/v1", api_key_env_var: str = "DEEPSEEK_API_KEY", model: str = "deepseek-chat") -> str:
-        """
-        Send messages to the DeepSeek API for translation.
-
-        Args:
-            messages: List of message dictionaries
-            base_url: Base URL for the DeepSeek API
-            api_key_env_var: Environment variable name containing API key
-            model: DeepSeek model to use for translation
-
-        Returns:
-            Translated text from DeepSeek
-        """
-        client = OpenAI(
-            api_key=os.environ.get(api_key_env_var),
-            base_url=base_url
-        )
-
-        response = client.chat.completions.create(
-            messages=messages,
-            model=model,
-            temperature=1.3  # This is set according to official doc https://api-docs.deepseek.com/quick_start/parameter_settings
-        )
-
-        return response.choices[0].message.content.strip()
-
-# If you wish to use other providers or packages, you can just override the chat function.

@@ -15,9 +15,9 @@ All you need to bring is a glossary file.
 - [x] Assess te need for RAG system at all in retriving words. 
   - [x] Using a purely string matching algorithm seems to work better than RAG. 
   - [x] Perhaps a string matching, then use LLM to remove semantically irrelevent terms?
-- [ ] Improve the prompting techniques sto reduce token usage. 
+- [x] Improve the prompting techniques sto reduce token usage. 
   - [x] Re-format the system and user prompt. 
-  - [ ] Take advantage of prompt caching from API providers.
+  - [x] Take advantage of prompt caching from API providers.
 - [ ] Add support for vllm or Llama.cpp as they allow you to run more models than Ollama. (Low priority)
 
 
