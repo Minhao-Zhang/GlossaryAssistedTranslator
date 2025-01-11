@@ -13,7 +13,6 @@ from ollama import Client
 from openai import OpenAI
 import pandas as pd
 from gat.glossary_matcher import GlossaryMatcher
-from gat.glossary_rag import GlossaryRAG
 
 
 class BaseTranslator:
@@ -25,10 +24,9 @@ class BaseTranslator:
     """
 
     def __init__(self,
-                 rag: Optional[GlossaryRAG] = None,
                  matcher: Optional[GlossaryMatcher] = None,
-                 system_prompt_file: str = "prompt_template/system_prompt_v1.txt",
-                 user_prompt_file: str = "prompt_template/user_prompt_v1.txt"
+                 system_prompt_file: str = "prompt_template/system_prompt_v2.txt",
+                 user_prompt_file: str = "prompt_template/user_prompt_v2.txt"
                  ):
         """
         Initialize the translator with optional glossary components.
@@ -38,13 +36,11 @@ class BaseTranslator:
             matcher: GlossaryMatcher instance for exact match glossary lookup
             system_prompt_file: Path to file containing the system prompt template
         """
-        self.rag = rag
         self.matcher = matcher
         with open(system_prompt_file, "r") as file:
             self.system_prompt = file.read()
         with open(user_prompt_file, "r") as file:
             self.user_prompt = file.read()
-
 
     def translate_text(self, text: str, use_glossary=False) -> str:
         """
@@ -61,7 +57,8 @@ class BaseTranslator:
         """
 
         if use_glossary:
-            definitions, examples = self.format_glossary(self.get_glossary(text))
+            definitions, examples = self.format_glossary(
+                self.get_glossary(text))
         else:
             definitions, examples = "", ""
 
@@ -92,10 +89,8 @@ class BaseTranslator:
             DataFrame containing matching glossary entries with columns:
             Term, Translation, Definition, Example
         """
-        all_results = pd.DataFrame(columns=["Term", "Translation", "Definition", "Example"])
-        if self.rag:
-            rag_results = self.rag.query(sentence)
-            all_results = pd.concat([all_results, rag_results])
+        all_results = pd.DataFrame(
+            columns=["Term", "Translation", "Definition", "Example"])
         if self.matcher:
             matcher_results = self.matcher.search_sentence(sentence)
             all_results = pd.concat([all_results, matcher_results])
@@ -177,7 +172,8 @@ class BaseTranslator:
         for sentence in tqdm(sentences, desc="Translating sentences"):
             glossary = self.get_glossary(sentence)
             definitions, examples = self.format_glossary(glossary)
-            messages = self.build_messages(history, definitions, examples, sentence)
+            messages = self.build_messages(
+                history, definitions, examples, sentence)
 
             translated_text = self.chat(messages)
             translated.append(translated_text)
@@ -245,7 +241,6 @@ class OpenAITranslator(BaseTranslator):
         response = client.chat.completions.create(
             messages=messages,
             model=model,
-            # temperature=1.3
         )
 
         return response.choices[0].message.content.strip()

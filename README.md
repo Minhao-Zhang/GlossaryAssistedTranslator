@@ -11,13 +11,12 @@ A tool box that can be used to translate anything with glossary.
 All you need to bring is a glossary file. 
 
 ## TODO 
-- [ ] Remove Langchain from project, too limited capability
 - [ ] Add additional ASR models. Whisper and fast-whisper often hullucinates and give me long text without captalization and 
-- [ ] Assess te need for RAG system at all in retriving words. 
-  - [ ] Using a purely string matching algorithm seems to work better than RAG. 
-  - [ ] Perhaps a string matching, then use LLM to remove semantically irrelevent terms?
+- [x] Assess te need for RAG system at all in retriving words. 
+  - [x] Using a purely string matching algorithm seems to work better than RAG. 
+  - [x] Perhaps a string matching, then use LLM to remove semantically irrelevent terms?
 - [ ] Improve the prompting techniques sto reduce token usage. 
-  - [ ] Re-format the system and user prompt. 
+  - [x] Re-format the system and user prompt. 
   - [ ] Take advantage of prompt caching from API providers.
 - [ ] Add support for vllm or Llama.cpp as they allow you to run more models than Ollama. (Low priority)
 
@@ -26,20 +25,14 @@ All you need to bring is a glossary file.
 
 I am assuming you have a NVIDIA GPU and you have installed the NVIDIA drivers. If not, you can still use APIs to accomplish most tasks in this project. I am running on Ubunbu under Windows Subsystem Linux. Your set up might be a bit different. 
 
-> This will be changed to remove langchain.
 
 ```bash
 sudo apt update -y 
 sudo apt upgrade -y 
 sudo apt insall ffmpeg
 
-conda create -n video-translation python=3.12.4
-conda activate video-translation
-conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
-pip install faster_whisper
-conda install cudnn # you might need this for faster_whisper
-pip install transformers
-pip install langchain langchain_community langchain_chroma # I certainly forgot some of them
+conda create -n gat python=3.12.4
+pip install -r requirements.txt
 ```
 
 If you want to use APIs, you need to install the corresponding python package. 

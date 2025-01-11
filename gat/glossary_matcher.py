@@ -15,18 +15,15 @@ from nltk.stem import PorterStemmer
 class GlossaryMatcher:
     """A class for managing and searching domain-specific glossary terms."""
 
-    def __init__(self, data: List[Dict] = None):
+    def __init__(self):
         """
         Initialize the glossary matcher.
 
         Args:
             data: List of dictionaries containing glossary entries with Term, Definition, and Example fields
         """
-        self.data = pd.DataFrame(data) if data else pd.DataFrame()
+        self.data = pd.DataFrame()
         self.stemmer = PorterStemmer()
-        if not self.data.empty:
-            self.data['StemmedTerm'] = self.data['Term'].apply(
-                self.stemmer.stem)
 
     def search(self, term: str) -> pd.DataFrame:
         """
@@ -76,8 +73,8 @@ class GlossaryMatcher:
         segments = words.copy()
         for i in range(len(words) - 1):
             segments.append(f"{words[i]} {words[i+1]}")
-        
-        # Only check the unique ones 
+
+        # Only check the unique ones
         segments = list(set(segments))
 
         # Search each segment and combine results

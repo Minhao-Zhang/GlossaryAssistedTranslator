@@ -1,0 +1,10 @@
+Please use the following references for consistency:  
+
+**Glossary Definitions:**  
+{definitions}  
+
+**Example Translations:**  
+{examples}  
+
+Translate the following sentence:  
+{sentence}  
