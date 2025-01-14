@@ -1,6 +1,7 @@
 cache/*
-ytb_cookies.txt
 data/*
+testing/*
+ytb_cookies.txt
 cp_to_host.sh
 
 # Byte-compiled / optimized / DLL files
