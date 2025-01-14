@@ -4,24 +4,70 @@ import os
 import yt_dlp
 
 
-def download_video(url: str, output_dir: str = 'cache') -> str:
+def download_video(url: str, output_dir: str = 'cache', use_cookie_file=None) -> str:
     """Download video from a YouTube video or other source.
 
     Args:
         url (str): The URL of the video.
         output_dir (str, optional): Output directory. Defaults to 'cache'.
+        use_cookie_file (str, optional): Path to cookie file for authentication. Defaults to None.
 
     Returns:
-        str: The path to the downloaded audio file.
+        str: The path to the downloaded video file.
+
+    Raises:
+        FileNotFoundError: If cookie file is specified but does not exist
     """
 
     # check the output_dir exists
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    ydl_opts = {'format': "bestvideo+bestaudio",
-                'cookiefile': 'ytb_cookies.txt',
-                'outtmpl': f'{output_dir}/%(id)s.%(ext)s'}
+    if use_cookie_file:
+        if not os.path.exists(use_cookie_file):
+            raise FileNotFoundError(f"Cookie file not found: {use_cookie_file}")
+        ydl_opts = {'format': "bestvideo+bestaudio",
+                    'cookiefile': use_cookie_file,
+                    'outtmpl': f'{output_dir}/%(id)s.%(ext)s'}
+    else:
+        ydl_opts = {'format': "bestvideo+bestaudio",
+                    'outtmpl': f'{output_dir}/%(id)s.%(ext)s'}
+    
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url)
+
+    return f'{output_dir}/{info["id"]}.{info["ext"]}'
+
+
+def download_audio(url: str, output_dir: str = 'cache', use_cookie_file=None) -> str:
+    """Download video from a YouTube audio or other source.
+
+    Args:
+        url (str): The URL of the audio.
+        output_dir (str, optional): Output directory. Defaults to 'cache'.
+        use_cookie_file (str, optional): Path to cookie file for authentication. Defaults to None.
+
+    Returns:
+        str: The path to the downloaded audio file.
+
+    Raises:
+        FileNotFoundError: If cookie file is specified but does not exist
+    """
+
+    # check the output_dir exists
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    if use_cookie_file:
+        if not os.path.exists(use_cookie_file):
+            raise FileNotFoundError(f"Cookie file not found: {use_cookie_file}")
+        ydl_opts = {'format': "bestaudio",
+                    'cookiefile': use_cookie_file,
+                    'outtmpl': f'{output_dir}/%(id)s.%(ext)s'}
+    else:
+        ydl_opts = {'format': "bestaudio",
+                    'outtmpl': f'{output_dir}/%(id)s.%(ext)s'}
+    
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url)
 

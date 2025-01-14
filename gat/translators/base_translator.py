@@ -24,7 +24,10 @@ class BaseTranslator:
     def __init__(self,
                  matcher: Optional[GlossaryMatcher] = None,
                  system_prompt_file: str = "prompt_template/system_prompt_v2.txt",
-                 user_prompt_file: str = "prompt_template/user_prompt_v2.txt"
+                 user_prompt_file: str = "prompt_template/user_prompt_v2.txt",
+                 base_url: str = None, 
+                 api_key_env_var: str = None, 
+                 model: str = None
                  ):
         """
         Initialize the translator with optional glossary components.
@@ -32,8 +35,14 @@ class BaseTranslator:
         Args:
             matcher: GlossaryMatcher instance for exact match glossary lookup
             system_prompt_file: Path to file containing the system prompt template
+            base_url: Base URL for the API
+            api_key_env_var: Environment variable name containing API key
+            model: Model to use for translation
         """
         self.matcher = matcher
+        self.base_url = base_url
+        self.api_key_env_var = api_key_env_var
+        self.model = model
         with open(system_prompt_file, "r") as file:
             self.system_prompt = file.read()
         with open(user_prompt_file, "r") as file:
@@ -137,17 +146,14 @@ class BaseTranslator:
 
         return messages
 
-    def chat(self, messages: List[dict], base_url: str, api_key_env_var: str, model: str) -> str:
+    def chat(self, messages: List[dict],) -> str:
         """
         Abstract method for sending messages to the translation API. 
         You should override this in sub-classes.
 
         Args:
             messages: List of message dictionaries
-            base_url: Base URL for the API
-            api_key_env_var: Environment variable name containing API key
-            model: Model to use for translation
-
+           
         Returns:
             Translated text from the API
         """

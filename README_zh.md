@@ -1,6 +1,6 @@
 # 词汇表辅助翻译器
 
-[English](README.md) | 中文版（机翻）
+[English](README.md) | 中文版（机翻且可能过时了）
 
 一个可以使用词汇表翻译任何内容的工具箱。
 - 针对字幕翻译优化
@@ -11,40 +11,28 @@
 你只需要提供一个词汇表文件。
 
 ## 待办事项
-- [ ] 从项目中移除Langchain，功能太有限s
 - [ ] 添加额外的ASR模型。Whisper和fast-whisper经常产生幻觉，给出没有大写字母的长文本
-- [ ] 评估是否需要RAG系统来检索词汇
-  - [ ] 纯字符串匹配算法似乎比RAG效果更好
-  - [ ] 也许可以先使用字符串匹配，然后用LLM去除语义不相关的词汇？
-- [ ] 改进提示以减少token使用
-  - [ ] 重新格式化系统和用户提示
-  - [ ] 利用API提供商的提示缓存
+- [x] 评估是否需要RAG系统来检索词汇
+  - [x] 纯字符串匹配算法似乎比RAG效果更好
+  - [x] 也许可以先使用字符串匹配，然后用LLM去除语义不相关的词汇？
+- [x] 改进提示技术以减少token使用
+  - [x] 重新格式化系统和用户提示
+  - [x] 利用API提供商的提示缓存
 - [ ] 添加对vllm或Llama.cpp的支持，因为它们允许运行比Ollama更多的模型（低优先级）
 
 ## 安装
 
 假设你有一个NVIDIA GPU并且已经安装了NVIDIA驱动。如果没有，你仍然可以使用API来完成本项目中的大多数任务。我在Windows子系统Linux下的Ubuntu上运行。你的设置可能会有所不同。
 
-> 这将更改为移除langchain。
-
+你可以使用几乎任何现代版本的Python，已在`python 3.10.12`和`python 3.12.4`上测试过。
 ```bash
 sudo apt update -y 
 sudo apt upgrade -y 
 sudo apt insall ffmpeg
 
-conda create -n video-translation python=3.12.4
-conda activate video-translation
-conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
-pip install faster_whisper
-conda install cudnn # 你可能需要这个来运行faster_whisper
-pip install transformers
-pip install langchain langchain_community langchain_chroma # 我肯定忘记了一些
-```
-
-如果你想使用API，你需要安装以下包。
-
-```bash
-pip install openai
+conda create -n gat python=3.10.12
+pip install -r requirements.txt
+conda install cudnn # 你可能需要这个来运行faster-whisper
 ```
 
 ## 词汇表文件格式
@@ -63,14 +51,11 @@ pip install openai
 
 ## 类似项目
 
-在开发这个项目时，我发现了一些类似的项目。
-它们有更好的UI，目前功能也更完善。
+在开发这个项目时，我发现了一些提供良好UI用于翻译字幕的项目。
 - [RSS-Translator](https://github.com/rss-translator/RSS-Translator)
 - [video-subtitle-master](video-subtitle-master)
 
-然而，我的项目旨在开发一个低资源翻译系统，可以用于翻译小众主题。
-
 ## 吐槽
 
-- 这个项目起源于我想翻译一些视频到中文。现在，它变得一团糟。
-- DeepSeek API太便宜了。它也比我能在笔记本电脑上运行的任何模型都要好。我开始认为我应该直接使用API而不是Ollama。
+- 这个项目起源于我想翻译一些视频到中文。现在，我希望将其构建成一个真正的工具箱。
+- DeepSeek API非常便宜。它也比我能在笔记本电脑上运行的任何模型都要好。我开始认为我应该直接使用API而不是Ollama。

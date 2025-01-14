@@ -5,7 +5,7 @@
 A tool box that can be used to translate anything with glossary. 
 - optimized for subtitle translation
 - choose between local hosted model or APIs
-- low-resource translation with RAG-powered glossary generation
+- low resource translation with glossary assistance
 - (potentially) automatic subtitle merging and breaking
 
 All you need to bring is a glossary file. 
@@ -25,20 +25,15 @@ All you need to bring is a glossary file.
 
 I am assuming you have a NVIDIA GPU and you have installed the NVIDIA drivers. If not, you can still use APIs to accomplish most tasks in this project. I am running on Ubunbu under Windows Subsystem Linux. Your set up might be a bit different. 
 
-
+You can use pretty much any modern version of python, tested on `python 3.10.12` and `python 3.12.4`. 
 ```bash
 sudo apt update -y 
 sudo apt upgrade -y 
 sudo apt insall ffmpeg
 
-conda create -n gat python=3.12.4
+conda create -n gat python=3.10.12
 pip install -r requirements.txt
-```
-
-If you want to use APIs, you need to install the corresponding python package. 
-
-```bash
-pip install openai
+conda install cudnn # you might need this for faster-whisper
 ```
 
 ## Glossary File Format 
@@ -54,6 +49,11 @@ Here is a sample file.
 "Ollama","Ollama","Ollama is a software that will enable you to run LLMs locally with one-click.","I prefer Ollama over vllm because it is simple. --> 相比vllm，我还是更喜欢Ollama的简洁。"
 "Whisper","Whisper","Whisper is a ASR model developed by openAI","Whisper is a ASR model develoepd by openAI. --> Whisper是一个由openAI开发的自动语言识别模型。"
 ```
+
+## Quick Start 
+
+See [example.ipynb](example/example.ipynb). 
+
 
 ## Similar Projects 
 
