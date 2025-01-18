@@ -25,8 +25,8 @@ class BaseTranslator:
                  matcher: Optional[GlossaryMatcher] = None,
                  system_prompt_file: str = "prompt_template/system_prompt_v2.txt",
                  user_prompt_file: str = "prompt_template/user_prompt_v2.txt",
-                 base_url: str = None, 
-                 api_key_env_var: str = None, 
+                 base_url: str = None,
+                 api_key_env_var: str = None,
                  model: str = None
                  ):
         """
@@ -153,7 +153,7 @@ class BaseTranslator:
 
         Args:
             messages: List of message dictionaries
-           
+
         Returns:
             Translated text from the API
         """
@@ -189,4 +189,8 @@ class BaseTranslator:
                 "role": "assistant",
                 "content": translated_text,
             })
+
+            # print(f"Original  : {sentence}")
+            # print(f"Translated: {translated_text}")
+
         return translated

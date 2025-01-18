@@ -111,7 +111,7 @@ class GlossaryMatcher:
 if __name__ == "__main__":
     # Initialize the glossary matcher
     matcher = GlossaryMatcher()
-    matcher.load_from_dir()
+    matcher.load_from_dir("../valo-data/")
 
     print("Glossary Matcher Service initialized. Type 'exit' to quit.")
 
