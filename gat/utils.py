@@ -199,3 +199,73 @@ def save_bilingual_srt(file_name: str, start: list, end: list, text: list, trans
             f.write(f"{s} --> {e}\n")
             f.write(f"{t}\n")
             f.write(f"{tr}\n\n")
+
+
+def split_subtitles(start: list[datetime.timedelta], end: list[datetime.timedelta], sentences: list[str]) -> tuple[list, list, list]:
+    """
+    Split Chinese subtitle sentences if they exceed 40 characters.
+
+    Args:
+        start (list): List of start times as datetime.timedelta objects
+        end (list): List of end times as datetime.timedelta objects
+        sentences (list): List of Chinese sentences to potentially split
+
+    Returns:
+        tuple: Three lists containing new start times, end times, and texts
+               with split sentences and adjusted timings
+    """
+    new_start = []
+    new_end = []
+    new_sentences = []
+
+    for start_time, end_time, sentence in zip(start, end, sentences):
+        if len(sentence) <= 40:
+            new_start.append(start_time)
+            new_end.append(end_time)
+            new_sentences.append(sentence)
+            continue
+
+        # Find all Chinese commas in the sentence
+        commas = [i for i, char in enumerate(sentence) if char == '，']
+        
+        if not commas:
+            new_start.append(start_time)
+            new_end.append(end_time)
+            new_sentences.append(sentence)
+            continue
+
+        # Find the comma closest to the middle
+        middle = len(sentence) // 2
+        split_index = min(commas, key=lambda x: abs(x - middle)) + 1  # Include the comma
+
+        # Split the sentence
+        part1 = sentence[:split_index]
+        part2 = sentence[split_index:]
+
+        # Calculate time proportions
+        total_length = len(sentence)
+        part1_ratio = len(part1) / total_length
+        duration = (end_time - start_time).total_seconds()
+
+        # Calculate new end time for part1 with 50ms gap
+        part1_end = start_time + datetime.timedelta(seconds=duration * part1_ratio) - datetime.timedelta(milliseconds=50)
+        
+        # Calculate new start time for part2 with 50ms gap
+        part2_start = part1_end + datetime.timedelta(milliseconds=100)
+
+        # Ensure the gap doesn't make the duration negative
+        if part1_end > start_time and part2_start < end_time:
+            new_start.append(start_time)
+            new_end.append(part1_end)
+            new_sentences.append(part1)
+
+            new_start.append(part2_start)
+            new_end.append(end_time)
+            new_sentences.append(part2)
+        else:
+            # If gap would make duration negative, don't split
+            new_start.append(start_time)
+            new_end.append(end_time)
+            new_sentences.append(sentence)
+    
+    return new_start, new_end, new_sentences
