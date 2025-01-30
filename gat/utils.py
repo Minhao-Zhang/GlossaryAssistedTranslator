@@ -25,14 +25,15 @@ def download_video(url: str, output_dir: str = 'cache', use_cookie_file=None) ->
 
     if use_cookie_file:
         if not os.path.exists(use_cookie_file):
-            raise FileNotFoundError(f"Cookie file not found: {use_cookie_file}")
+            raise FileNotFoundError(
+                f"Cookie file not found: {use_cookie_file}")
         ydl_opts = {'format': "bestvideo+bestaudio",
                     'cookiefile': use_cookie_file,
                     'outtmpl': f'{output_dir}/%(id)s.%(ext)s'}
     else:
         ydl_opts = {'format': "bestvideo+bestaudio",
                     'outtmpl': f'{output_dir}/%(id)s.%(ext)s'}
-    
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url)
 
@@ -60,14 +61,15 @@ def download_audio(url: str, output_dir: str = 'cache', use_cookie_file=None) ->
 
     if use_cookie_file:
         if not os.path.exists(use_cookie_file):
-            raise FileNotFoundError(f"Cookie file not found: {use_cookie_file}")
+            raise FileNotFoundError(
+                f"Cookie file not found: {use_cookie_file}")
         ydl_opts = {'format': "bestaudio",
                     'cookiefile': use_cookie_file,
                     'outtmpl': f'{output_dir}/%(id)s.%(ext)s'}
     else:
         ydl_opts = {'format': "bestaudio",
                     'outtmpl': f'{output_dir}/%(id)s.%(ext)s'}
-    
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url)
 

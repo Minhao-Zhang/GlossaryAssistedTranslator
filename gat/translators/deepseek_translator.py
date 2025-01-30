@@ -10,15 +10,16 @@ from gat.glossary_matcher import GlossaryMatcher
 class DeepSeekTranslator(BaseTranslator):
     """Translator implementation using the DeepSeek API."""
 
-    def __init__(self, 
-                 matcher: GlossaryMatcher = None, 
-                 system_prompt_file: str = "prompt_template/system_prompt_v2.txt", 
-                 user_prompt_file: str = "prompt_template/user_prompt_v2.txt", 
-                 base_url: str = "https://api.deepseek.com/v1", 
-                 api_key_env_var: str = "DEEPSEEK_API_KEY", 
+    def __init__(self,
+                 matcher: GlossaryMatcher = None,
+                 system_prompt_file: str = "prompt_template/system_prompt_v2.txt",
+                 user_prompt_file: str = "prompt_template/user_prompt_v2.txt",
+                 base_url: str = "https://api.deepseek.com/v1",
+                 api_key_env_var: str = "DEEPSEEK_API_KEY",
                  model: str = "deepseek-chat"
                  ):
-        super().__init__(matcher, system_prompt_file, user_prompt_file, base_url, api_key_env_var, model)
+        super().__init__(matcher, system_prompt_file,
+                         user_prompt_file, base_url, api_key_env_var, model)
 
         self.llm_client = OpenAI(
             api_key=os.environ.get(api_key_env_var),

@@ -14,7 +14,7 @@ class OllamaTranslator(BaseTranslator):
                  user_prompt_file="prompt_template/user_prompt_v2.txt",
                  base_url="localhost:11434",
                  api_key_env_var="OLLAMA_API_KEY",
-                 model="qwen2.5:7b"):
+                 model="qwen2.5:lastest"):
         """
         Initialize the translator with optional glossary components.
         If you are running this inside docker, use http://host.docker.internal:11434 for base_url.
