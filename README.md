@@ -10,20 +10,10 @@ A tool box that can be used to translate anything with glossary.
 
 All you need to bring is a glossary file. 
 
-## TODO 
-- [ ] Add additional ASR models. Whisper and fast-whisper often hullucinates and give me long text without captalization and 
-- [x] Assess te need for RAG system at all in retriving words. 
-  - [x] Using a purely string matching algorithm seems to work better than RAG. 
-  - [x] Perhaps a string matching, then use LLM to remove semantically irrelevent terms?
-- [x] Improve the prompting techniques sto reduce token usage. 
-  - [x] Re-format the system and user prompt. 
-  - [x] Take advantage of prompt caching from API providers.
-- [ ] Add support for vllm or Llama.cpp as they allow you to run more models than Ollama. (Low priority)
-
 
 ## Installation
 
-I am assuming you have a NVIDIA GPU and you have installed the NVIDIA drivers. If not, you can still use APIs to accomplish most tasks in this project. I am running on Ubunbu under Windows Subsystem Linux. Your set up might be a bit different. 
+I am assuming you have a NVIDIA GPU and you have installed the NVIDIA drivers. If not, you can still use APIs to accomplish most tasks in this project. I am running on Ubuntu under Windows Subsystem Linux. Your set up might be a bit different. 
 
 You can use pretty much any modern version of python, tested on `python 3.10.12` and `python 3.12.4`. 
 ```bash
@@ -36,13 +26,19 @@ pip install -r requirements.txt
 conda install cudnn # you might need this for faster-whisper
 ```
 
-## Glossary File Format 
+This will set up a environment for running the ASR model locally and calling any LLM APIs.
+If you want all local translation, install `Ollama` and pull whatever LLM model you want to use. 
+A good starting model is `qwen2.5` as it has a wide language support and it has a series of model size.
 
-You should put all your glossary file(s) in a directory. The default is `data`. You can choose to place all your glossary in one file or split them up to better manage them. 
+## Glossary File Format
 
-Regardless on how you decides to store them, they all should be `csv` files. Each csv file shall contain 4 required columns. The required 4 are `Term`, `Translation`, `Definition`, `Example`. You use any other column as metadata. 
+### Glossary Matcher Format
 
-Here is a sample file. 
+You should put all your glossary file(s) in a directory. The default is `data`. You can choose to place all your glossary in one file or split them up to better manage them.
+
+Regardless on how you decides to store them, they all should be `csv` files. Each csv file shall contain 4 required columns. The required 4 are `Term`, `Translation`, `Definition`, `Example`. You use any other column as metadata.
+
+Here is a sample file.
 
 ```csv
 "Term","Translation","Definition","Example"
@@ -52,7 +48,7 @@ Here is a sample file.
 
 ## Quick Start 
 
-See [example.ipynb](example/example.ipynb). 
+See [example.ipynb](example.ipynb). 
 
 
 ## Similar Projects 
@@ -65,3 +61,4 @@ In developing this project, I have found some projects that provides a good UI f
 
 - This project started off that I want to translate some videos into Chinese. Now, I wish to build this into an actual toolbox.
 - DeepSeek API is so cheap. It is also way better than any model I can host on my laptop. I started to think that I should just use the API instead of Ollama.
+- RIP DeepSeek server being DDOSed.

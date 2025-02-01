@@ -178,7 +178,18 @@ class BaseTranslator:
             messages = self.build_messages(
                 history, definitions, examples, sentence)
 
-            translated_text = self.chat(messages)
+            for attempt in range(5):
+                try:
+                    translated_text = self.chat(messages)
+                    break
+                except Exception as e:
+                    if attempt < 4:
+                        print(
+                            f"Attempt {attempt + 1} failed: {e}. Retrying...")
+                    else:
+                        raise RuntimeError(
+                            "Failed to get a response after 5 attempts") from e
+
             translated.append(translated_text)
 
             history.append({
@@ -190,7 +201,8 @@ class BaseTranslator:
                 "content": translated_text,
             })
 
-            # print(f"Original  : {sentence}")
-            # print(f"Translated: {translated_text}")
+            with open('temp.log', 'a') as log_file:
+                log_file.write(f"Original  : {sentence}\n")
+                log_file.write(f"Translated: {translated_text}\n")
 
         return translated

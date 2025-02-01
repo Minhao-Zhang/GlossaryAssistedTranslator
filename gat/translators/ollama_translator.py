@@ -44,6 +44,11 @@ class OllamaTranslator(BaseTranslator):
             Translated text from Ollama
         """
 
+        options = {
+            "num_ctx": 1024*8,
+            # "temperature": 0,
+        }
+
         response = self.llm_client.chat(
             model=self.model,
             messages=messages
