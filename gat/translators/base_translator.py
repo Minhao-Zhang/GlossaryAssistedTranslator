@@ -172,7 +172,20 @@ class BaseTranslator:
         """
         translated = []
         history = deque(maxlen=n_history*2)
+
+        # handle speaker diarization
+        speaker_diarization = False
+        # read in the first sentence and check for [SPEAKER_02]: or similar strings
+        # if found, set speaker_diarization to True
+        if "[SPEAKER_" in sentences[0]:
+            speaker_diarization = True
+
         for sentence in tqdm(sentences, desc="Translating sentences"):
+            if speaker_diarization:
+                # remove the speaker tag from the sentence]
+                speaker = sentence[:14]
+                sentence = sentence[14:]
+
             glossary = self.get_glossary(sentence)
             definitions, examples = self.format_glossary(glossary)
             messages = self.build_messages(
@@ -190,7 +203,7 @@ class BaseTranslator:
                         raise RuntimeError(
                             "Failed to get a response after 5 attempts") from e
 
-            translated.append(translated_text)
+            translated.append(speaker + translated_text)
 
             history.append({
                 "role": "user",

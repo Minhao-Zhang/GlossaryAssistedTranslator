@@ -201,3 +201,78 @@ def save_bilingual_srt(file_name: str, start: list, end: list, text: list, trans
             f.write(f"{s} --> {e}\n")
             f.write(f"{t}\n")
             f.write(f"{tr}\n\n")
+
+
+def save_ass(file_name: str, start: list, end: list, text: list, davinci: bool = False) -> None:
+    """
+    Save subtitles in ASS format with different colors for different speakers.
+
+    Args:
+        file_name (str): The name of the file to save the subtitles.
+        start (list): List of start times as datetime.timedelta objects.
+        end (list): List of end times as datetime.timedelta objects.
+        text (list): List of subtitle texts.
+        davinci (bool): Adjust times for DaVinci Resolve timeline if True.
+    """
+    # Define a list of 10 colors
+    colors = [
+        "&HFF0000",  # Red
+        "&H00FF00",  # Green
+        "&H0000FF",  # Blue
+        "&HFFFF00",  # Yellow
+        "&HFF00FF",  # Magenta
+        "&H00FFFF",  # Cyan
+        "&HFFA500",  # Orange
+        "&H800080",  # Purple
+        "&H008000",  # Dark Green
+        "&H008080"   # Teal
+    ]
+
+    # Map speakers to colors
+    speaker_colors = {}
+    next_color_index = 0
+
+    with open(file_name, 'w', encoding='utf-8') as f:
+        f.write("[Script Info]\n")
+        f.write("ScriptType: v4.00+\n")
+        f.write("PlayResX: 640\n")
+        f.write("PlayResY: 480\n")
+        f.write("\n")
+        f.write("[V4+ Styles]\n")
+        f.write("Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n")
+        f.write("Style: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,10,10,10,0\n")
+        f.write("\n")
+        f.write("[Events]\n")
+        f.write(
+            "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n")
+
+        for i, (s, e, t) in enumerate(zip(start, end, text)):
+            # Extract speaker from the text
+            speaker = t.split(':')[0].strip('[]')
+            if speaker not in speaker_colors:
+                speaker_colors[speaker] = colors[next_color_index %
+                                                 len(colors)]
+                next_color_index += 1
+
+            # Calculate total seconds and centiseconds
+            ss = int(s.total_seconds())
+            es = int(e.total_seconds())
+            sms = s.microseconds // 1000
+            ems = e.microseconds // 1000
+
+            # Adjust for DaVinci Resolve timeline
+            if davinci:
+                ss += 3600
+                es += 3600
+
+            # Convert to centiseconds (0-99)
+            sms_centi = sms // 10
+            ems_centi = ems // 10
+
+            # Format start and end times
+            start_time = f"{ss//3600:01}:{(ss % 3600)//60:02}:{ss % 60:02}.{sms_centi:02}"
+            end_time = f"{es//3600:01}:{(es % 3600)//60:02}:{es % 60:02}.{ems_centi:02}"
+
+            # Write the subtitle block to the file
+            f.write(
+                f"Dialogue: 0,{start_time},{end_time},Default,,0,0,0,,{{\\c{speaker_colors[speaker]}}}{t}\n")
