@@ -35,12 +35,12 @@ class OpenRouterTranslator(BaseTranslator):
             messages: List of message dictionaries
 
         Returns:
-            Translated text from Openrouter
+            Translated text from OpenRouter
         """
 
         response = self.llm_client.chat.completions.create(
             messages=messages,
-            model=self.model,
+            model=self.model
         )
 
         return response.choices[0].message.content.strip()

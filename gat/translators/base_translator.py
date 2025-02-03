@@ -5,6 +5,7 @@ AI translation services including Ollama, OpenAI, and DeepSeek.
 """
 
 from collections import deque
+import time
 from typing import List, Optional
 
 import pandas as pd
@@ -160,7 +161,7 @@ class BaseTranslator:
         raise NotImplementedError(
             "Chat method must be implemented in subclass")
 
-    def translate_sentences(self, sentences: List[str], n_history=3) -> List[str]:
+    def translate_sentences(self, sentences: List[str], n_history: int = 3) -> List[str]:
         """
         Translate a list of sentences using the configured translator.
 
@@ -172,6 +173,10 @@ class BaseTranslator:
         """
         translated = []
         history = deque(maxlen=n_history*2)
+
+        # initialize a logging while translating
+        with open('temp.log', 'w') as log_file:
+            log_file.write("")
 
         # handle speaker diarization
         speaker_diarization = False
@@ -191,17 +196,18 @@ class BaseTranslator:
             messages = self.build_messages(
                 history, definitions, examples, sentence)
 
-            for attempt in range(5):
+            for attempt in range(10):
                 try:
                     translated_text = self.chat(messages)
                     break
                 except Exception as e:
-                    if attempt < 4:
+                    time.sleep(1)
+                    if attempt < 9:
                         print(
                             f"Attempt {attempt + 1} failed: {e}. Retrying...")
                     else:
                         raise RuntimeError(
-                            "Failed to get a response after 5 attempts") from e
+                            "Failed to get a response after 10 attempts") from e
 
             translated.append(speaker + translated_text)
 
