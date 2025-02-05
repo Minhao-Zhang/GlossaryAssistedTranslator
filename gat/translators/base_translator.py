@@ -196,15 +196,16 @@ class BaseTranslator:
             messages = self.build_messages(
                 history, definitions, examples, sentence)
 
-            for attempt in range(10):
+            for attempt in range(5):
                 try:
                     translated_text = self.chat(messages)
                     break
                 except Exception as e:
-                    time.sleep(1)
-                    if attempt < 9:
+                    wait_time = 2 ** attempt
+                    time.sleep(wait_time)
+                    if attempt < 5:
                         print(
-                            f"Attempt {attempt + 1} failed: {e}. Retrying...")
+                            f"Attempt {attempt + 1} failed: {e}. Retrying in {wait_time} seconds...")
                     else:
                         raise RuntimeError(
                             "Failed to get a response after 10 attempts") from e
