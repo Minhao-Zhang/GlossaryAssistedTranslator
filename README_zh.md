@@ -1,61 +1,92 @@
-# 词汇表辅助翻译器
+# 术语辅助翻译器
 
-[English](README.md) | 中文版（机翻且可能过时了）
+[English](README.md) | 中文版
 
-一个可以使用词汇表翻译任何内容的工具箱。
+一个支持术语表辅助翻译的通用工具箱
+
 - 针对字幕翻译优化
-- 可选择本地托管模型或API
-- 通过RAG驱动的词汇表生成实现低资源翻译
-- （可能）自动字幕合并和拆分
+- 支持本地模型或API调用
+- 通过术语表实现低资源消耗翻译
+- （计划中）自动字幕分段与合并功能
 
-你只需要提供一个词汇表文件。
+您只需准备好术语表文件即可开启翻译之旅
 
-## 待办事项
-- [ ] 添加额外的ASR模型。Whisper和fast-whisper经常产生幻觉，给出没有大写字母的长文本
-- [x] 评估是否需要RAG系统来检索词汇
-  - [x] 纯字符串匹配算法似乎比RAG效果更好
-  - [x] 也许可以先使用字符串匹配，然后用LLM去除语义不相关的词汇？
-- [x] 改进提示技术以减少token使用
-  - [x] 重新格式化系统和用户提示
-  - [x] 利用API提供商的提示缓存
-- [ ] 添加对vllm或Llama.cpp的支持，因为它们允许运行比Ollama更多的模型（低优先级）
+## 安装部署
 
-## 安装
+本项目具有高度灵活性，支持从全本地运行到完全API调用的多种部署方案
 
-假设你有一个NVIDIA GPU并且已经安装了NVIDIA驱动。如果没有，你仍然可以使用API来完成本项目中的大多数任务。我在Windows子系统Linux下的Ubuntu上运行。你的设置可能会有所不同。
+### 全本地推理部署方案
 
-你可以使用几乎任何现代版本的Python，已在`python 3.10.12`和`python 3.12.4`上测试过。
+假设您已配备NVIDIA显卡并安装驱动程序。若无GPU仍可通过API完成大部分功能。测试环境为Windows子系统Ubuntu，不同系统配置可能略有差异。
+
+支持Python 3.10+版本，已在`python 3.10.12`和`python 3.12.4`验证。主要受限于依赖项`faster-whisper`。
+
 ```bash
 sudo apt update -y 
 sudo apt upgrade -y 
-sudo apt insall ffmpeg
+sudo apt install ffmpeg
 
 conda create -n gat python=3.10.12
 pip install -r requirements.txt
-conda install cudnn # 你可能需要这个来运行faster-whisper
+conda install cudnn # 运行faster-whisper可能需要此依赖
 ```
 
-## 词汇表文件格式
+此环境配置支持本地运行语音识别模型及调用各类大语言模型API。若需完全本地化翻译，建议安装Ollama并下载所需LLM模型。qwen2.5系列模型因其多语言支持和灵活尺寸可作为初始选择，实际应用中可根据需求测试不同模型效果。
 
-你应该把所有词汇表文件放在一个目录中。默认是`data`目录。你可以选择将所有词汇放在一个文件中，或者将它们分开以便更好地管理。
+## 术语表格式规范
 
-无论你决定如何存储它们，它们都应该是`csv`文件。每个csv文件应包含4列或更多列。必需的4列是`Term`、`Translation`、`Definition`、`Example`。你可以使用其他列作为元数据。
+### 术语匹配表格式
 
-这是一个示例文件。
+请将所有术语表文件置于指定目录（默认为`data`），支持单文件整合或多文件分列管理。
+
+格式要求：
+
+- 必须使用CSV格式
+- 须包含四个核心字段：Term（术语）、Translation（译词）、Definition（定义）、Example（用例）
+- 
+其他字段可作为元数据自由添加
+
+示例文件：
 
 ```csv
 "Term","Translation","Definition","Example"
-"Ollama","Ollama","Ollama是一个可以让你一键在本地运行LLM的软件。","I prefer Ollama over vllm because it is simple. --> 相比vllm，我还是更喜欢Ollama的简洁。"
-"Whisper","Whisper","Whisper是openAI开发的ASR模型","Whisper is a ASR model develoepd by openAI. --> Whisper是一个由openAI开发的自动语言识别模型。"
+"Ollama","Ollama","一键式本地运行大语言模型的软件","I prefer Ollama over vllm because it is simple. --> 相比vllm，我还是更喜欢Ollama的简洁。"
+"Whisper","Whisper","OpenAI开发的语音识别模型","Whisper is a ASR model develoepd by openAI. --> Whisper是一个由openAI开发的自动语言识别模型。"
 ```
 
-## 类似项目
+## 术语校正表格式
 
-在开发这个项目时，我发现了一些提供良好UI用于翻译字幕的项目。
+采用JSON格式，键名为标准术语，键值为常见变体列表。
+
+示例文件：
+
+```json
+{
+    "Ollama": ["Ohllama"],
+    "Qwen": ["Quwen", "Kuen"]
+}
+```
+
+## 快速入门
+
+请参考示例文件example.ipynb
+
+## 说话人识别字幕
+
+基于whisperX实现说话人识别功能，可在转写字幕前自动添加[SPEAKER_00]: 标识（数字代表不同说话人）。
+
+注：因环境配置问题，Python直接集成whisperX未获成功。推荐使用[jim60105制作的docker镜像](https://github.com/jim60105/docker-whisperX)。
+
+在`scripts/`目录中提供了Windows PowerShell和Bash脚本范例，供参考使用。
+
+## 同类项目
+
+开发过程中发现以下优秀的字幕翻译工具：
+
 - [RSS-Translator](https://github.com/rss-translator/RSS-Translator)
 - [video-subtitle-master](video-subtitle-master)
 
-## 吐槽
+## 开发手记
 
-- 这个项目起源于我想翻译一些视频到中文。现在，我希望将其构建成一个真正的工具箱。
-- DeepSeek API非常便宜。它也比我能在笔记本电脑上运行的任何模型都要好。我开始认为我应该直接使用API而不是Ollama。
+- 深度求索API的价格非常低廉，效果远超本地模型，正考虑全面转向API方案
+- 深切哀悼被DDOS攻击的深度求索服务器
